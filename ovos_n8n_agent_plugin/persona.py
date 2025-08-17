@@ -14,16 +14,13 @@ class N8NJarvisPersona(ChatMessageSolver):
     Processes all queries through n8n webhook for AI agent handling
     """
     
-    # Define priority property at class level
-    _priority = 100
-    
     def __init__(self, config: Optional[Dict[str, Any]] = None, 
                  translator=None, detector=None, priority=100,
                  enable_tx=False, enable_cache=True, 
                  internal_lang=None):
         """Initialize JARVIS persona with n8n integration"""
         
-        # Set priority before calling super().__init__
+        # Initialize priority attribute before super().__init__
         self._priority = priority
         
         super().__init__(config=config, translator=translator, 
@@ -49,7 +46,7 @@ class N8NJarvisPersona(ChatMessageSolver):
     @property
     def priority(self):
         """Get the priority of this solver"""
-        return self._priority
+        return getattr(self, '_priority', 100)
     
     @priority.setter
     def priority(self, value):
