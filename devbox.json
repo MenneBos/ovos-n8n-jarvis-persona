@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/main/schema.json",
+  "packages": [
+    "python@3.11",
+    "uv@latest",
+    "dbus@latest",
+    "mpv@latest",
+    "ffmpeg@latest",
+    "git@latest"
+  ],
+  "env": {
+    "UV_SYSTEM_PYTHON": "1",
+    "PYTHONPATH": "$DEVBOX_PROJECT_ROOT:$PYTHONPATH",
+    "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/$(id -u)/bus"
+  },
+  "shell": {
+    "init_hook": [
+      "echo '🚀 OVOS N8N Agent Plugin Development Environment'",
+      "echo ''",
+      "echo 'Available commands:'",
+      "echo '  devbox shell         - Enter development shell'",
+      "echo '  uv sync             - Install dependencies'",
+      "echo '  uv pip install -e . - Install package in editable mode'",
+      "echo '  uv run pytest       - Run tests'",
+      "echo '  uv run black .      - Format code'",
+      "echo '  uv run ruff check . - Lint code'",
+      "echo ''",
+      "if [ ! -d .venv ]; then",
+      "  echo '📦 Creating virtual environment...'",
+      "  uv venv",
+      "fi",
+      "echo '✅ Virtual environment ready at .venv'",
+      "echo ''",
+      "if [ ! -f .venv/installed_marker ]; then",
+      "  echo '📚 Installing dependencies...'",
+      "  uv sync",
+      "  uv pip install -e .",
+      "  touch .venv/installed_marker",
+      "  echo '✅ Dependencies installed'",
+      "else",
+      "  echo '✅ Dependencies already installed (run \"uv sync\" to update)'",
+      "fi",
+      "echo ''",
+      "source .venv/bin/activate",
+      "echo '🐍 Python $(python --version | cut -d' ' -f2) activated'",
+      "echo ''"
+    ],
+    "scripts": {
+      "test": [
+        "uv run pytest -v"
+      ],
+      "format": [
+        "uv run black .",
+        "uv run ruff check . --fix"
+      ],
+      "lint": [
+        "uv run ruff check .",
+        "uv run mypy ovos_n8n_agent_plugin"
+      ],
+      "install-dev": [
+        "uv sync --all-extras",
+        "uv pip install -e ."
+      ],
+      "build": [
+        "uv build"
+      ],
+      "clean": [
+        "rm -rf build dist *.egg-info .pytest_cache .coverage htmlcov",
+        "find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true",
+        "find . -type f -name '*.pyc' -delete"
+      ],
+      "spotifyd-status": [
+        "systemctl --user status spotifyd || echo 'spotifyd not running'"
+      ],
+      "dbus-check": [
+        "dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep -E 'spotify|spotifyd' || echo 'No Spotify/spotifyd found on D-Bus'"
+      ]
+    }
+  },
+  "nixpkgs-commit": "f1010e0469db743d14519a1efd37e23f8513d714"
+}
