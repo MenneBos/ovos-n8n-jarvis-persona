@@ -160,6 +160,9 @@ class N8NClient:
             yield {"error": str(e), "type": "request_error"}
     
     def _parse_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        # Log the raw response for debugging
+        logger.debug(f"Raw n8n response: {json.dumps(response, indent=2)}")
+        
         if "error" in response:
             return {
                 "type": "error",
@@ -175,14 +178,44 @@ class N8NClient:
                 "response": response.get("response", "")
             }
         
-        if "text" in response or "message" in response or "response" in response:
+        # Check for direct string response (n8n might return just a string)
+        if isinstance(response, str):
             return {
                 "type": "text",
-                "text": response.get("text") or response.get("message") or response.get("response", ""),
-                "response": response.get("response", ""),
+                "text": response,
+                "response": response,
+                "metadata": {}
+            }
+        
+        # Check for various response formats
+        if "text" in response or "message" in response or "response" in response or "output" in response or "result" in response:
+            text = (response.get("text") or 
+                   response.get("message") or 
+                   response.get("response") or 
+                   response.get("output") or 
+                   response.get("result", ""))
+            return {
+                "type": "text",
+                "text": text,
+                "response": response.get("response", text),
                 "metadata": response.get("metadata", {})
             }
         
+        # If response has any keys at all, try to extract text from them
+        if response:
+            # Try to find any text-like field
+            for key in ["content", "answer", "reply", "data"]:
+                if key in response:
+                    value = response[key]
+                    if isinstance(value, str):
+                        return {
+                            "type": "text",
+                            "text": value,
+                            "response": value,
+                            "metadata": response
+                        }
+        
+        logger.warning(f"Unknown response format from n8n: {response}")
         return {
             "type": "unknown",
             "data": response

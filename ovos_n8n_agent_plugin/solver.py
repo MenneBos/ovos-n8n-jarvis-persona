@@ -1,5 +1,6 @@
 """N8N ChatMessageSolver for OVOS"""
 import asyncio
+import json
 from typing import Optional, Dict, Any, List
 from ovos_plugin_manager.templates.solvers import ChatMessageSolver
 from ovos_utils.log import LOG
@@ -113,6 +114,24 @@ class N8NJarvisSolver(ChatMessageSolver):
             
             # Handle unknown response type
             logger.warning(f"Unknown response type: {response.get('type')}")
+            logger.debug(f"Full unknown response: {response}")
+            
+            # Try to extract any useful text from the response
+            if response.get("data"):
+                data = response["data"]
+                # If data is a string, return it
+                if isinstance(data, str):
+                    return data
+                # If data is a dict, try to find any text field
+                if isinstance(data, dict):
+                    for key in ["text", "message", "response", "output", "result", "content", "answer"]:
+                        if key in data:
+                            value = data[key]
+                            if isinstance(value, str):
+                                return value
+                    # If no text field found, return the whole dict as string
+                    return json.dumps(data)
+            
             return response.get("text") or response.get("response") or response.get("message")
             
         except Exception as e:
