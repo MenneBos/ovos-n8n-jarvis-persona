@@ -70,7 +70,16 @@ def test_solver():
             response = solver.get_chat_completion(messages, lang="en-US")
             
             if response:
-                print(f"  ✓ Response: {response[:200]}{'...' if len(response) > 200 else ''}")
+                try:
+                    # Safely format response for display
+                    if isinstance(response, str):
+                        display_text = response[:200] + ('...' if len(response) > 200 else '')
+                    else:
+                        display_text = str(response)[:200] + ('...' if len(str(response)) > 200 else '')
+                    print(f"  ✓ Response: {display_text}")
+                except Exception as e:
+                    print(f"  ✓ Response received but error displaying: {e}")
+                    print(f"     Response type: {type(response)}")
             else:
                 print("  ✗ No response received")
         except Exception as e:

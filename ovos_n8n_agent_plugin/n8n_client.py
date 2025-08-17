@@ -66,14 +66,27 @@ class N8NClient:
             )
             response.raise_for_status()
             
-            # Log response details
-            logger.debug(f"Response status code: {response.status_code}")
-            logger.debug(f"Response headers: {dict(response.headers)}")
-            logger.debug(f"Response content-type: {response.headers.get('content-type', 'not set')}")
+            # Log response details safely
+            try:
+                logger.debug(f"Response status code: {response.status_code}")
+                logger.debug(f"Response headers: {dict(response.headers)}")
+                logger.debug(f"Response content-type: {response.headers.get('content-type', 'not set')}")
+            except Exception as e:
+                logger.error(f"Error logging response details: {e}")
             
-            # Log raw response text first
-            response_text = response.text
-            logger.debug(f"N8N raw response text: {response_text[:500]}...")  # First 500 chars
+            # Get raw response text
+            try:
+                response_text = response.text
+                if response_text:
+                    # Safely log first part of response
+                    log_text = response_text if len(response_text) < 500 else response_text[:500] + "..."
+                    logger.debug(f"N8N raw response text: {log_text}")
+                else:
+                    logger.warning("N8N returned empty response body")
+                    return {"type": "error", "error": "Empty response from n8n"}
+            except Exception as e:
+                logger.error(f"Error getting response text: {e}")
+                return {"type": "error", "error": f"Failed to read response: {e}"}
             
             # Try to parse as JSON
             try:
@@ -83,6 +96,9 @@ class N8NClient:
                 # If not JSON, treat as plain text response
                 logger.debug(f"Response is not valid JSON: {e}")
                 logger.debug(f"Treating as plain text")
+                result = response_text
+            except Exception as e:
+                logger.error(f"Unexpected error parsing response: {e}")
                 result = response_text
             
             return self._parse_response(result)
@@ -190,6 +206,30 @@ class N8NClient:
                 "response": response,
                 "metadata": {}
             }
+        
+        # Check if response is a list (n8n returns array format)
+        if isinstance(response, list):
+            logger.debug(f"Response is a list with {len(response)} items")
+            if len(response) > 0:
+                # Take the first item
+                first_item = response[0]
+                # If it has an output field, extract from there
+                if isinstance(first_item, dict) and "output" in first_item:
+                    output = first_item["output"]
+                    if isinstance(output, dict):
+                        # Extract response text from output
+                        text = output.get("response") or output.get("text") or output.get("message", "")
+                        return {
+                            "type": "text",
+                            "text": text,
+                            "response": text,
+                            "metadata": output
+                        }
+                # Otherwise try to parse the first item directly
+                return self._parse_response(first_item)
+            else:
+                logger.warning("N8N returned empty array")
+                return {"type": "error", "error": "Empty response array from n8n"}
         
         # Log the raw response for debugging if it's a dict
         if isinstance(response, dict):

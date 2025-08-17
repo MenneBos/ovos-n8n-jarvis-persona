@@ -69,11 +69,15 @@ class N8NJarvisSolver(ChatMessageSolver):
             
             # Build context from message if available
             if message and not context:
-                context = {
-                    "skill_id": message.context.get("skill_id"),
-                    "source": message.context.get("source"),
-                    "destination": message.context.get("destination")
-                }
+                try:
+                    context = {
+                        "skill_id": message.context.get("skill_id") if hasattr(message, 'context') else None,
+                        "source": message.context.get("source") if hasattr(message, 'context') else None,
+                        "destination": message.context.get("destination") if hasattr(message, 'context') else None
+                    }
+                except Exception as e:
+                    logger.debug(f"Could not extract context from message: {e}")
+                    context = {}
             
             # Send to n8n webhook
             response = self.n8n_client.send_query_sync(utterance, context)
