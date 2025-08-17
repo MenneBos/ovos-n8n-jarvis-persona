@@ -1,15 +1,15 @@
-# OVOS N8N Agent Plugin for JARVIS
+# OVOS N8N JARVIS Persona Plugin
 
-A sophisticated OVOS Question Solver plugin that integrates with n8n workflows to create a JARVIS-like AI assistant. This plugin sends user queries to n8n webhooks where they're processed by AI agents, then executes the returned tool commands locally.
+A sophisticated OVOS Persona plugin that embodies JARVIS from Iron Man, processing all queries through n8n workflows with AI agents to create an intelligent, character-driven assistant experience.
 
 ## Features
 
-- **JARVIS Persona**: Embodies the sophisticated AI assistant from Iron Man
-- **N8N Webhook Integration**: Connects to n8n workflows for AI processing
-- **Daily Session Management**: Automatically creates fresh sessions each day
-- **Tool Command Processing**: Executes timer, alarm, and delegates music/weather to sub-workflows
-- **Streaming Support**: Real-time streaming of AI responses
-- **Extensible Architecture**: Easy to add new tool handlers
+- **JARVIS Persona**: Full character embodiment of Tony Stark's AI assistant
+- **N8N Webhook Integration**: All queries processed through n8n workflows
+- **Daily Session Management**: Automatic session rotation for context management
+- **Tool Command Processing**: Local execution of timers, alarms, and delegated tools
+- **Streaming Support**: Natural speech with streamed responses
+- **Primary Interface**: Can replace standard OVOS intent system
 
 ## Supported Tools
 
@@ -27,35 +27,81 @@ A sophisticated OVOS Question Solver plugin that integrates with n8n workflows t
 
 ```bash
 # Clone the repository
-git clone https://github.com/reklis/ovos-n8n-agent-plugin.git
-cd ovos-n8n-agent-plugin
+git clone https://github.com/reklis/ovos-n8n-jarvis-persona.git
+cd ovos-n8n-jarvis-persona
 
 # Install in development mode
-uv sync
-uv pip install -e .
+pip install -e .
+
+# Or install from pip (when published)
+pip install ovos-n8n-jarvis-persona
+
+# Quick setup (runs all steps)
+./setup.sh
 ```
 
 ## Configuration
 
-### OVOS Configuration
+### 1. Create Persona Config
+
+Copy the JARVIS persona config to OVOS persona directory:
+
+```bash
+mkdir -p ~/.config/ovos_persona/
+cp config/jarvis_persona.json ~/.config/ovos_persona/jarvis.json
+```
+
+Edit `~/.config/ovos_persona/jarvis.json` with your n8n webhook URL:
+
+```json
+{
+  "name": "JARVIS",
+  "description": "Just A Rather Very Intelligent System",
+  "persona_plugin": "ovos-n8n-jarvis-persona",
+  "ovos-n8n-jarvis-persona": {
+    "webhook_url": "https://your-n8n.com/webhook/jarvis",
+    "primary_persona": true,
+    "enable_streaming": true,
+    "process_tools": true,
+    "use_daily_session": true,
+    "session_id_prefix": "jarvis",
+    "timeout": 30
+  }
+}
+```
+
+### 2. Update OVOS Configuration
 
 Add to your mycroft.conf (`~/.config/mycroft/mycroft.conf`):
 
 ```json
 {
-  "question_solvers": {
-    "ovos-n8n-agent-plugin": {
-      "enable_tx": true,
-      "priority": 100,
-      "webhook_url": "https://your-n8n.com/webhook/jarvis",
-      "timeout": 30,
-      "max_retries": 3,
-      "enable_streaming": true,
-      "process_tools": true,
-      "return_text_only": false,
-      "use_daily_session": true,
-      "session_id_prefix": "jarvis"
+  "lang": "en-us",
+  "listener": {
+    "wake_word": "hey_jarvis"
+  },
+  "hotwords": {
+    "hey_jarvis": {
+      "module": "ovos-ww-plugin-openwakeword",
+      "threshold": 0.3
     }
+  },
+  "intents": {
+    "persona": {
+      "enabled": true,
+      "default_persona": "jarvis",
+      "personas_path": "~/.config/ovos_persona/"
+    },
+    "pipeline": [
+      "stop_high",
+      "converse",
+      "ovos-persona",
+      "padatious_high",
+      "adapt_high",
+      "common_qa",
+      "fallback_high",
+      "fallback_low"
+    ]
   }
 }
 ```
@@ -65,15 +111,15 @@ Add to your mycroft.conf (`~/.config/mycroft/mycroft.conf`):
 | Option | Default | Description |
 |--------|---------|-------------|
 | `webhook_url` | Required | Your n8n webhook endpoint URL |
-| `enable_tx` | `true` | Allow solver to transmit responses |
-| `priority` | `100` | Higher priority processes queries first |
-| `timeout` | `30` | Request timeout in seconds |
-| `max_retries` | `3` | Number of retry attempts |
+| `primary_persona` | `true` | If true, handles all queries |
 | `enable_streaming` | `true` | Enable streaming responses |
 | `process_tools` | `true` | Process tool commands from n8n |
-| `return_text_only` | `false` | Return only text responses |
+| `return_text_only` | `false` | Return only text without tool execution |
+| `fallback_enabled` | `true` | Act as fallback when not primary |
 | `use_daily_session` | `true` | Create new session each day |
 | `session_id_prefix` | `"jarvis"` | Prefix for session IDs |
+| `wake_words` | `["jarvis"]` | Wake words to trigger persona |
+| `timeout` | `30` | Request timeout in seconds |
 
 ## N8N Workflow Setup
 
@@ -98,13 +144,13 @@ The `workflows/` directory contains ready-to-use n8n workflow templates:
    - Select each JSON file from the `workflows/` folder
    - Configure webhook URLs and API keys as needed
 
-3. **Update webhook URL in mycroft.conf:**
+3. **Update webhook URL in jarvis.json:**
    - Copy the webhook URL from the imported JARVIS workflow
-   - Update `webhook_url` in your mycroft.conf configuration
+   - Update `webhook_url` in your jarvis.json configuration
 
-### Manual Workflow Setup
+### Expected Webhook Format
 
-If you prefer to create custom workflows, your n8n webhook should expect this format:
+Your n8n webhook receives:
 ```json
 {
   "message": "user's spoken command",
@@ -113,47 +159,15 @@ If you prefer to create custom workflows, your n8n webhook should expect this fo
 }
 ```
 
-### 2. Configure AI Agent Response
-
-The AI agent should return responses matching the JARVIS persona with tool commands:
-
+And should return:
 ```json
 {
-  "response": "Very well, Sir. I've initiated a 10-minute timer for you.",
+  "response": "Certainly Sir, I'll set that timer for you.",
   "tool": "timer",
   "action": "start",
   "params": {
-    "duration": 600000,
+    "duration": 300000,
     "name": "timer_0"
-  }
-}
-```
-
-### 3. Music Sub-workflow
-
-For music requests, delegate to a spotify_music sub-workflow:
-
-```json
-{
-  "response": "Searching for Bohemian Rhapsody, Sir.",
-  "tool": "spotify_music",
-  "params": {
-    "question": "Play Bohemian Rhapsody"
-  }
-}
-```
-
-### 4. Weather Sub-workflow
-
-For weather requests:
-
-```json
-{
-  "response": "Let me check the current conditions for you, Sir.",
-  "tool": "weather",
-  "params": {
-    "location": "London",
-    "forecast": true
   }
 }
 ```
@@ -166,11 +180,33 @@ The plugin automatically generates daily session IDs:
 - Maintains conversation context within a day
 - Configurable via `use_daily_session` and `session_id_prefix`
 
+## How It Works
+
+1. **User speaks** → "Hey JARVIS, set a timer for 5 minutes"
+2. **OVOS processes** → Wake word detected, routes to JARVIS persona
+3. **Persona sends to n8n** → Query sent to webhook with session ID
+4. **N8N workflow runs** → AI agent processes with JARVIS personality
+5. **Response returned** → JARVIS responds and executes timer locally
+
+## Testing Installation
+
+```bash
+# Run the persona test
+python test_persona.py
+```
+
+The test will verify:
+- Module import
+- Persona instantiation
+- Matching logic
+- Entry point registration
+- Configuration files
+- Plugin manager detection
+
 ## Tool Command Examples
 
 ### Timer Operations
 ```json
-// Start a timer
 {
   "tool": "timer",
   "action": "start",
@@ -179,18 +215,10 @@ The plugin automatically generates daily session IDs:
     "name": "timer_0"
   }
 }
-
-// Check timer status
-{
-  "tool": "timer",
-  "action": "status",
-  "params": {}
-}
 ```
 
 ### Alarm Management
 ```json
-// Set an alarm
 {
   "tool": "alarm",
   "action": "set",
@@ -199,15 +227,6 @@ The plugin automatically generates daily session IDs:
     "name": "morning_alarm",
     "label": "Wake up",
     "repeat_daily": true
-  }
-}
-
-// Snooze alarm
-{
-  "tool": "alarm",
-  "action": "snooze",
-  "params": {
-    "duration": 5  // minutes
   }
 }
 ```
@@ -229,23 +248,13 @@ The plugin works with two system prompts:
 1. **jarvis_system_prompt.md**: Main JARVIS persona and tool routing
 2. **music_system_prompt.md**: Spotify MCP sub-workflow handling
 
-See the included prompt files for examples of how to configure your AI agent.
+## Project Structure
 
-## Response Schema
-
-Responses follow the schema defined in `n8n_response_schema.json`:
-- Required: `success` field
-- Required: `response` field with JARVIS's spoken text
-- Tool-specific fields based on the operation
-
-## Development
-
-### Project Structure
 ```
 ovos-n8n-agent-plugin/
 ├── ovos_n8n_agent_plugin/
 │   ├── __init__.py
-│   ├── solver.py              # Main OVOS solver
+│   ├── persona.py             # JARVIS persona implementation
 │   ├── n8n_client.py          # N8N webhook client
 │   ├── command_processor.py   # Tool command router
 │   └── media_controllers/
@@ -257,52 +266,80 @@ ovos-n8n-agent-plugin/
 │   ├── weather.json          # Weather sub-workflow
 │   └── movies.json           # Movies sub-workflow
 ├── config/
-│   ├── mycroft.conf          # OVOS configuration
-│   └── n8n_agent.json        # Plugin config example
-├── jarvis_system_prompt.md   # Main JARVIS prompt
-├── music_system_prompt.md    # Music sub-workflow prompt
-└── n8n_response_schema.json  # Response format schema
+│   ├── jarvis_persona.json  # Persona configuration
+│   └── mycroft_persona.conf # Example OVOS config
+├── jarvis_system_prompt.md  # Main JARVIS prompt
+├── music_system_prompt.md   # Music sub-workflow prompt
+└── n8n_response_schema.json # Response format schema
 ```
-
-### Testing
-
-```bash
-# Run tests
-pytest tests/
-
-# Test with sample webhook payload
-python -m ovos_n8n_agent_plugin.test_webhook
-```
-
-### Adding New Tools
-
-1. Add handler to `command_processor.py`:
-```python
-def _handle_my_tool(self, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
-    # Implementation
-    return {"success": True, "message": "Completed"}
-```
-
-2. Register in `tool_handlers` dictionary
-3. Update jarvis_system_prompt.md with examples
-4. Update n8n_response_schema.json
 
 ## Troubleshooting
 
-### Plugin Not Loading
-- Check OVOS logs: `~/.local/state/mycroft/logs/`
-- Verify plugin is installed: `pip list | grep ovos-n8n`
-- Check configuration syntax in mycroft.conf
+### Persona Not Loading
 
-### N8N Connection Issues
-- Test webhook: `curl -X POST {webhook_url} -H "Content-Type: application/json" -d '{"message":"test"}'`
-- Check firewall/network settings
-- Verify webhook URL is accessible
+1. **Check installation:**
+   ```bash
+   python -c "import ovos_n8n_agent_plugin; print(ovos_n8n_agent_plugin.__version__)"
+   ```
 
-### Session Issues
-- Sessions reset daily at midnight
-- Check session_id format in n8n workflow logs
-- Verify `use_daily_session` is enabled
+2. **Verify entry point:**
+   ```bash
+   python -c "from ovos_plugin_manager.templates.persona import find_persona_plugins; print(find_persona_plugins())"
+   ```
+
+3. **Reinstall if needed:**
+   ```bash
+   pip install -e . --force-reinstall
+   ```
+
+### Persona Not Responding
+
+1. **Check configuration:**
+   ```bash
+   cat ~/.config/ovos_persona/jarvis.json
+   ```
+
+2. **Verify OVOS pipeline:**
+   - Ensure `ovos-persona` is in intent pipeline
+   - Check `persona.enabled` is true
+
+3. **Test webhook:**
+   ```bash
+   curl -X POST https://your-n8n.com/webhook/jarvis \
+     -H "Content-Type: application/json" \
+     -d '{"message":"test","session_id":"jarvis-2025-01-17"}'
+   ```
+
+4. **Check logs:**
+   ```bash
+   tail -f ~/.local/state/mycroft/logs/skills.log
+   ```
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| `ModuleNotFoundError` | Run `pip install -e .` in plugin directory |
+| Entry point not found | Reinstall with `pip install -e . --force-reinstall` |
+| Webhook timeout | Check n8n is running and URL is correct |
+| No response | Verify webhook returns proper JSON format |
+| Config not loaded | Ensure jarvis.json is valid JSON |
+
+## Message Bus Events
+
+The persona emits events for tool executions:
+
+```
+ovos.persona.jarvis.tool.timer
+ovos.persona.jarvis.tool.alarm
+ovos.persona.jarvis.tool.spotify_music
+ovos.persona.jarvis.tool.weather
+```
+
+Listen to events:
+```bash
+ovos-cli-client monitor
+```
 
 ## License
 

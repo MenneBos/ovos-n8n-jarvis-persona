@@ -3,16 +3,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ovos-n8n-agent-plugin"
-version = "0.1.0"
-description = "OVOS plugin for N8N AI agent integration with multimedia support"
+name = "ovos-n8n-jarvis-persona"
+version = "0.2.0"
+description = "OVOS JARVIS Persona plugin with N8N workflow integration"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "Apache-2.0"}
 authors = [
     {name = "Your Name", email = "your.email@example.com"},
 ]
-keywords = ["ovos", "n8n", "ai", "agent", "multimedia", "spotify", "voice", "assistant"]
+keywords = ["ovos", "n8n", "jarvis", "persona", "ai", "voice", "assistant", "iron-man"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -46,12 +46,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/ovos-n8n-agent-plugin"
-Repository = "https://github.com/yourusername/ovos-n8n-agent-plugin.git"
-Issues = "https://github.com/yourusername/ovos-n8n-agent-plugin/issues"
+Homepage = "https://github.com/reklis/ovos-n8n-jarvis-persona"
+Repository = "https://github.com/reklis/ovos-n8n-jarvis-persona.git"
+Issues = "https://github.com/reklis/ovos-n8n-jarvis-persona/issues"
 
-[project.entry-points."ovos.plugin.solver"]
-ovos-n8n-agent-plugin = "ovos_n8n_agent_plugin.solver:N8NAgentSolver"
+[project.entry-points."ovos.plugin.persona"]
+ovos-n8n-jarvis-persona = "ovos_n8n_agent_plugin.persona:N8NJarvisPersona"
 
 [tool.hatch.build.targets.wheel]
 packages = ["ovos_n8n_agent_plugin"]
