@@ -23,7 +23,7 @@ def get_jarvis_persona():
                 logger.info(f"Loaded JARVIS config from {config_path}")
                 
                 # Extract the n8n configuration section
-                n8n_config = user_config.get("ovos-n8n-jarvis-persona", {})
+                n8n_config = user_config.get("ovos-n8n-jarvis-solver", {})
                 
                 # Build the persona configuration
                 return {
