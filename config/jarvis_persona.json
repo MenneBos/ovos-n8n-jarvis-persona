@@ -1,7 +1,8 @@
 {
   "name": "JARVIS",
   "description": "Just A Rather Very Intelligent System - Tony Stark's AI assistant from Iron Man",
-  "ovos-n8n-jarvis-persona": {
+  "solvers": ["ovos-n8n-jarvis-solver"],
+  "ovos-n8n-jarvis-solver": {
     "webhook_url": "https://your-n8n.com/webhook/jarvis",
     "primary_persona": true,
     "enable_streaming": true,
@@ -14,6 +15,6 @@
     "max_retries": 3,
     "wake_words": ["jarvis", "hey jarvis", "okay jarvis"],
     "api_key": "",
-    "comment": "The persona plugin is automatically registered via pip install. This file should be placed at ~/.config/ovos_persona/jarvis.json"
+    "comment": "Copy this file to ~/.config/ovos_persona/jarvis.json and update webhook_url"
   }
 }

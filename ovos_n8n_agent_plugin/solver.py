@@ -58,6 +58,15 @@ class N8NJarvisSolver(ChatMessageSolver):
         response = self.get_response(user_message, lang=lang)
         return response or "I'm unable to process that request at the moment, Sir."
     
+    def spoken_answer(self, query: str, lang: str = "en-US") -> str:
+        """
+        Method for spoken responses - used by OVOS persona system
+        """
+        logger.debug(f"spoken_answer called with: {query}")
+        # Use get_response directly for spoken queries
+        response = self.get_response(query, lang=lang)
+        return response or "I'm unable to process that request at the moment, Sir."
+    
     def get_response(self, utterance: str, lang: str = None, 
                     message=None, context: Optional[Dict] = None) -> Optional[str]:
         """
