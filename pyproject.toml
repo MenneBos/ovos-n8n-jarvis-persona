@@ -50,7 +50,7 @@ Homepage = "https://github.com/reklis/ovos-n8n-jarvis-persona"
 Repository = "https://github.com/reklis/ovos-n8n-jarvis-persona.git"
 Issues = "https://github.com/reklis/ovos-n8n-jarvis-persona/issues"
 
-[project.entry-points."opm.solver"]
+[project.entry-points."opm.solver.chat"]
 ovos-n8n-jarvis-solver = "ovos_n8n_agent_plugin.solver:N8NJarvisSolver"
 
 [project.entry-points."opm.persona"]
