@@ -1,277 +1,308 @@
-# OVOS N8N AI Agent Plugin
+# OVOS N8N Agent Plugin for JARVIS
 
-A custom OVOS plugin that bypasses traditional intent/persona architecture and uses n8n with agentic AI for processing queries and controlling multimedia.
+A sophisticated OVOS Question Solver plugin that integrates with n8n workflows to create a JARVIS-like AI assistant. This plugin sends user queries to n8n webhooks where they're processed by AI agents, then executes the returned tool commands locally.
 
 ## Features
 
-- **N8N Integration**: Connects to n8n webhook endpoints for AI agent processing
-- **Tool Call Processing**: Interprets JSON tool responses from n8n and executes actions
-- **Multimedia Support**:
-  - Spotify control via D-Bus/MPRIS (spotifyd support)
-  - Audio playback (local files, URLs, sound effects)
-  - Video playback (local files, URLs, streaming)
-  - Image display
-- **Streaming Responses**: Supports real-time streaming of AI responses
+- **JARVIS Persona**: Embodies the sophisticated AI assistant from Iron Man
+- **N8N Webhook Integration**: Connects to n8n workflows for AI processing
+- **Daily Session Management**: Automatically creates fresh sessions each day
+- **Tool Command Processing**: Executes timer, alarm, and delegates music/weather to sub-workflows
+- **Streaming Support**: Real-time streaming of AI responses
 - **Extensible Architecture**: Easy to add new tool handlers
+
+## Supported Tools
+
+### Local Tools (Handled by Plugin)
+- **Timer**: Start, stop, pause, resume, status, clear timers
+- **Alarm**: Set, cancel, snooze, list, enable/disable alarms
+
+### Delegated Tools (Via N8N Sub-workflows)
+- **Spotify Music**: All music playback via spotify_music sub-workflow
+- **Weather**: Current conditions and forecasts via weather sub-workflow
+- **Movies**: Movie information via movies MCP tool
+- **Calculator**: Math calculations via calculator MCP tool
 
 ## Installation
 
-### Using Devbox and UV (Recommended)
-
-This project uses [Devbox](https://www.jetpack.io/devbox) for reproducible development environments and [UV](https://github.com/astral-sh/uv) for fast Python package management.
-
 ```bash
-# Install Devbox (if not already installed)
-curl -fsSL https://get.jetpack.io/devbox | bash
-
 # Clone the repository
-git clone https://github.com/yourusername/ovos-n8n-agent-plugin.git
+git clone https://github.com/reklis/ovos-n8n-agent-plugin.git
 cd ovos-n8n-agent-plugin
 
-# Enter the development environment (auto-installs dependencies)
-devbox shell
-
-# The environment automatically:
-# - Creates a virtual environment
-# - Installs all dependencies
-# - Installs the package in editable mode
-
-# To manually install/update dependencies:
+# Install in development mode
 uv sync
 uv pip install -e .
-```
-
-### Manual Installation
-
-If you prefer not to use Devbox:
-
-```bash
-# Install UV
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create virtual environment and install
-uv venv
-source .venv/bin/activate
-uv sync
-uv pip install -e .
-```
-
-### Development Commands
-
-When inside the Devbox shell, you have access to these commands:
-
-```bash
-# Run tests
-devbox run test
-
-# Format code
-devbox run format
-
-# Lint code
-devbox run lint
-
-# Build package
-devbox run build
-
-# Clean build artifacts
-devbox run clean
-
-# Check Spotify/spotifyd status
-devbox run spotifyd-status
-devbox run dbus-check
 ```
 
 ## Configuration
 
 ### OVOS Configuration
 
-Add the solver to your OVOS persona configuration (`~/.config/ovos_persona/n8n_agent.json`):
+Add to your mycroft.conf (`~/.config/mycroft/mycroft.conf`):
 
 ```json
 {
-  "name": "N8N Agent",
-  "solvers": [
-    "ovos-n8n-agent-plugin"
-  ],
-  "ovos-n8n-agent-plugin": {
-    "webhook_url": "http://localhost:5678/webhook/chat",
-    "api_key": "your-api-key-if-needed",
-    "timeout": 30,
-    "enable_streaming": true,
-    "process_tools": true,
-    "spotify": {
-      "use_spotifyd": true,
-      "device_name": "OVOS"
-    },
-    "audio": {
-      "player_command": "auto",
-      "default_volume": 50
-    },
-    "video": {
-      "player_command": "auto",
-      "fullscreen": false,
-      "display": ":0"
+  "question_solvers": {
+    "ovos-n8n-agent-plugin": {
+      "enable_tx": true,
+      "priority": 100,
+      "webhook_url": "https://your-n8n.com/webhook/jarvis",
+      "timeout": 30,
+      "max_retries": 3,
+      "enable_streaming": true,
+      "process_tools": true,
+      "return_text_only": false,
+      "use_daily_session": true,
+      "session_id_prefix": "jarvis"
     }
   }
 }
 ```
 
-### N8N Webhook Setup
+### Configuration Options
 
-1. Create a webhook trigger in n8n
-2. Connect it to your AI agent workflow
-3. Configure the agent to return tool calls in this format:
+| Option | Default | Description |
+|--------|---------|-------------|
+| `webhook_url` | Required | Your n8n webhook endpoint URL |
+| `enable_tx` | `true` | Allow solver to transmit responses |
+| `priority` | `100` | Higher priority processes queries first |
+| `timeout` | `30` | Request timeout in seconds |
+| `max_retries` | `3` | Number of retry attempts |
+| `enable_streaming` | `true` | Enable streaming responses |
+| `process_tools` | `true` | Process tool commands from n8n |
+| `return_text_only` | `false` | Return only text responses |
+| `use_daily_session` | `true` | Create new session each day |
+| `session_id_prefix` | `"jarvis"` | Prefix for session IDs |
 
+## N8N Workflow Setup
+
+### Import Pre-built Workflows
+
+The `workflows/` directory contains ready-to-use n8n workflow templates:
+
+1. **Import the workflows into n8n:**
+   ```bash
+   # Main JARVIS workflow (required)
+   workflows/jarvis.json     # Main AI agent with JARVIS persona
+   
+   # Sub-workflows (import as needed)
+   workflows/music.json       # Spotify MCP integration
+   workflows/weather.json     # Weather service integration  
+   workflows/movies.json      # Movie information via TMDB
+   ```
+
+2. **To import in n8n:**
+   - Open your n8n instance
+   - Go to Workflows → Import from File
+   - Select each JSON file from the `workflows/` folder
+   - Configure webhook URLs and API keys as needed
+
+3. **Update webhook URL in mycroft.conf:**
+   - Copy the webhook URL from the imported JARVIS workflow
+   - Update `webhook_url` in your mycroft.conf configuration
+
+### Manual Workflow Setup
+
+If you prefer to create custom workflows, your n8n webhook should expect this format:
 ```json
 {
-  "text": "I'll play that playlist for you",
-  "tool_calls": [
-    {
-      "tool": "spotify",
-      "action": "play_playlist",
-      "params": {
-        "playlist_id": "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M",
-        "shuffle": true
-      }
-    }
-  ]
+  "message": "user's spoken command",
+  "session_id": "jarvis-2025-01-17",
+  "context": {}
 }
 ```
 
-## Supported Tool Calls
+### 2. Configure AI Agent Response
 
-### Spotify/Music
+The AI agent should return responses matching the JARVIS persona with tool commands:
 
 ```json
 {
-  "tool": "spotify",
-  "action": "play_playlist",
+  "response": "Very well, Sir. I've initiated a 10-minute timer for you.",
+  "tool": "timer",
+  "action": "start",
   "params": {
-    "playlist_id": "spotify:playlist:xxx",
-    "shuffle": true
+    "duration": 600000,
+    "name": "timer_0"
   }
 }
 ```
 
-Actions: `play`, `pause`, `play_pause`, `next`, `previous`, `play_playlist`, `play_track`, `play_album`, `play_artist`, `set_volume`, `shuffle`, `repeat`
+### 3. Music Sub-workflow
 
-### Audio
+For music requests, delegate to a spotify_music sub-workflow:
 
 ```json
 {
-  "tool": "audio",
-  "action": "play_file",
+  "response": "Searching for Bohemian Rhapsody, Sir.",
+  "tool": "spotify_music",
   "params": {
-    "file": "/path/to/audio.mp3"
+    "question": "Play Bohemian Rhapsody"
   }
 }
 ```
 
-Actions: `play_file`, `play_url`, `stop`, `pause`, `resume`, `set_volume`, `play_sound`
+### 4. Weather Sub-workflow
 
-### Video
+For weather requests:
 
 ```json
 {
-  "tool": "video",
-  "action": "play_url",
+  "response": "Let me check the current conditions for you, Sir.",
+  "tool": "weather",
   "params": {
-    "url": "https://example.com/video.mp4",
-    "fullscreen": true
+    "location": "London",
+    "forecast": true
   }
 }
 ```
 
-Actions: `play`, `play_file`, `play_url`, `stop`, `pause`, `resume`, `fullscreen`, `show_image`
+## Session Management
 
-### Calculations
+The plugin automatically generates daily session IDs:
+- Format: `{prefix}-YYYY-MM-DD` (e.g., `jarvis-2025-01-17`)
+- New session each day for fresh context
+- Maintains conversation context within a day
+- Configurable via `use_daily_session` and `session_id_prefix`
 
+## Tool Command Examples
+
+### Timer Operations
 ```json
+// Start a timer
 {
-  "tool": "calculate",
-  "action": "evaluate",
+  "tool": "timer",
+  "action": "start",
   "params": {
-    "expression": "2 + 2 * 3"
+    "duration": 300000,  // 5 minutes in milliseconds
+    "name": "timer_0"
+  }
+}
+
+// Check timer status
+{
+  "tool": "timer",
+  "action": "status",
+  "params": {}
+}
+```
+
+### Alarm Management
+```json
+// Set an alarm
+{
+  "tool": "alarm",
+  "action": "set",
+  "params": {
+    "time": "07:00",
+    "name": "morning_alarm",
+    "label": "Wake up",
+    "repeat_daily": true
+  }
+}
+
+// Snooze alarm
+{
+  "tool": "alarm",
+  "action": "snooze",
+  "params": {
+    "duration": 5  // minutes
   }
 }
 ```
 
-## Prerequisites
-
-### System Dependencies
-
-- **Spotify Control**: `spotifyd` or `spotify` desktop client
-- **Audio Players**: `paplay`, `mpg123`, `ffplay`, or `mpv`
-- **Video Players**: `mpv`, `vlc`, `mplayer`, or `ffplay`
-- **Image Viewers**: `feh` or `display` (ImageMagick)
-- **D-Bus**: Required for Spotify control
-
-### Python Dependencies
-
-All dependencies are managed via `pyproject.toml` and automatically installed when using Devbox or UV:
-
-- `ovos-plugin-manager>=0.0.25`
-- `ovos-utils>=0.0.38`
-- `requests>=2.31.0`
-- `pydbus>=0.6.0`
-- `aiohttp>=3.9.0`
-- `websocket-client>=1.6.0`
-
-## Usage Example
-
-Once configured, the plugin will intercept queries and send them to your n8n webhook:
-
+### Music Control (Delegated)
+```json
+{
+  "tool": "spotify_music",
+  "params": {
+    "question": "Play some AC/DC"
+  }
+}
 ```
-User: "Play my favorite playlist on Spotify"
-→ Query sent to n8n webhook
-→ N8N AI agent processes and returns tool call
-→ Plugin executes: spotify.play_playlist({"playlist_id": "..."})
-→ Music starts playing via spotifyd
-```
+
+## System Prompts
+
+The plugin works with two system prompts:
+
+1. **jarvis_system_prompt.md**: Main JARVIS persona and tool routing
+2. **music_system_prompt.md**: Spotify MCP sub-workflow handling
+
+See the included prompt files for examples of how to configure your AI agent.
+
+## Response Schema
+
+Responses follow the schema defined in `n8n_response_schema.json`:
+- Required: `success` field
+- Required: `response` field with JARVIS's spoken text
+- Tool-specific fields based on the operation
 
 ## Development
 
 ### Project Structure
-
 ```
 ovos-n8n-agent-plugin/
 ├── ovos_n8n_agent_plugin/
-│   ├── solver.py              # Main OVOS solver implementation
-│   ├── n8n_client.py          # N8N webhook communication
-│   ├── command_processor.py   # Tool call routing
+│   ├── __init__.py
+│   ├── solver.py              # Main OVOS solver
+│   ├── n8n_client.py          # N8N webhook client
+│   ├── command_processor.py   # Tool command router
 │   └── media_controllers/
-│       ├── spotify.py         # Spotify/spotifyd control
-│       ├── audio.py           # Audio playback
-│       └── video.py           # Video/image display
+│       ├── timer.py           # Timer operations
+│       └── alarm.py           # Alarm operations
+├── workflows/                 # Pre-built n8n workflows
+│   ├── jarvis.json           # Main JARVIS workflow
+│   ├── music.json            # Spotify MCP sub-workflow
+│   ├── weather.json          # Weather sub-workflow
+│   └── movies.json           # Movies sub-workflow
+├── config/
+│   ├── mycroft.conf          # OVOS configuration
+│   └── n8n_agent.json        # Plugin config example
+├── jarvis_system_prompt.md   # Main JARVIS prompt
+├── music_system_prompt.md    # Music sub-workflow prompt
+└── n8n_response_schema.json  # Response format schema
 ```
 
-### Adding New Tool Handlers
+### Testing
 
-1. Add handler method to `CommandProcessor` in `command_processor.py`
-2. Register in `self.tool_handlers` dictionary
-3. Implement the tool logic
+```bash
+# Run tests
+pytest tests/
 
-Example:
+# Test with sample webhook payload
+python -m ovos_n8n_agent_plugin.test_webhook
+```
+
+### Adding New Tools
+
+1. Add handler to `command_processor.py`:
 ```python
 def _handle_my_tool(self, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
     # Implementation
-    return {"success": True, "message": "Action completed"}
+    return {"success": True, "message": "Completed"}
 ```
+
+2. Register in `tool_handlers` dictionary
+3. Update jarvis_system_prompt.md with examples
+4. Update n8n_response_schema.json
 
 ## Troubleshooting
 
-### Spotify not responding
-- Ensure `spotifyd` is running: `systemctl --user status spotifyd`
-- Check D-Bus connection: `dbus-send --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep spotify`
+### Plugin Not Loading
+- Check OVOS logs: `~/.local/state/mycroft/logs/`
+- Verify plugin is installed: `pip list | grep ovos-n8n`
+- Check configuration syntax in mycroft.conf
 
-### Audio/Video playback issues
-- Install required players: `sudo apt install mpv ffmpeg paplay`
-- Check DISPLAY variable for video: `echo $DISPLAY`
-
-### N8N connection errors
+### N8N Connection Issues
+- Test webhook: `curl -X POST {webhook_url} -H "Content-Type: application/json" -d '{"message":"test"}'`
+- Check firewall/network settings
 - Verify webhook URL is accessible
-- Check firewall settings
-- Test with curl: `curl -X POST http://localhost:5678/webhook/chat -H "Content-Type: application/json" -d '{"message":"test"}'`
+
+### Session Issues
+- Sessions reset daily at midnight
+- Check session_id format in n8n workflow logs
+- Verify `use_daily_session` is enabled
 
 ## License
 
@@ -279,4 +310,10 @@ Apache License 2.0
 
 ## Contributing
 
-Contributions are welcome! Please submit pull requests or issues on GitHub.
+Contributions welcome! Please submit pull requests or issues on GitHub.
+
+## Credits
+
+- OVOS Community for the plugin framework
+- n8n for workflow automation
+- Inspired by JARVIS from Marvel's Iron Man
