@@ -61,7 +61,8 @@
     },
     {
       "parameters": {
-        "endpointUrl": "http://office.0x5f.sh:30301/mcp"
+        "endpointUrl": "http://office.0x5f.sh:30301/mcp",
+        "serverTransport": "httpStreamable"
       },
       "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
       "typeVersion": 1.1,
@@ -113,7 +114,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "3cddafd5-4f01-4baf-a39c-028a15f875de",
+  "versionId": "06e8296e-8509-4508-9409-0a541320b173",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "4711f5cd754bb8f9a867a48ef33bed51a5448d1e04645a159bef845553dab62f"
