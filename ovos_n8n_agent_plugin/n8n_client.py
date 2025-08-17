@@ -18,7 +18,8 @@ class N8NClient:
         self.use_daily_session = config.get("use_daily_session", True)
         self.session_id_prefix = config.get("session_id_prefix", "jarvis")
         self.headers = {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Accept": "application/json"
         }
         if self.api_key:
             self.headers["Authorization"] = f"Bearer {self.api_key}"
@@ -52,6 +53,10 @@ class N8NClient:
         if context:
             payload["context"] = context
         
+        logger.debug(f"Sending to n8n webhook: {self.webhook_url}")
+        logger.debug(f"Request payload: {json.dumps(payload, indent=2)}")
+        logger.debug(f"Request headers: {self.headers}")
+        
         try:
             response = requests.post(
                 self.webhook_url,
@@ -61,8 +66,24 @@ class N8NClient:
             )
             response.raise_for_status()
             
-            result = response.json()
-            logger.debug(f"N8N response: {result}")
+            # Log response details
+            logger.debug(f"Response status code: {response.status_code}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
+            logger.debug(f"Response content-type: {response.headers.get('content-type', 'not set')}")
+            
+            # Log raw response text first
+            response_text = response.text
+            logger.debug(f"N8N raw response text: {response_text[:500]}...")  # First 500 chars
+            
+            # Try to parse as JSON
+            try:
+                result = response.json()
+                logger.debug(f"Successfully parsed as JSON")
+            except json.JSONDecodeError as e:
+                # If not JSON, treat as plain text response
+                logger.debug(f"Response is not valid JSON: {e}")
+                logger.debug(f"Treating as plain text")
+                result = response_text
             
             return self._parse_response(result)
             
@@ -159,27 +180,10 @@ class N8NClient:
             logger.error(f"N8N webhook stream failed: {e}")
             yield {"error": str(e), "type": "request_error"}
     
-    def _parse_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
-        # Log the raw response for debugging
-        logger.debug(f"Raw n8n response: {json.dumps(response, indent=2)}")
-        
-        if "error" in response:
-            return {
-                "type": "error",
-                "error": response.get("error"),
-                "message": response.get("message", "An error occurred")
-            }
-        
-        if "tool_calls" in response:
-            return {
-                "type": "tool_calls",
-                "tool_calls": response["tool_calls"],
-                "text": response.get("text", ""),
-                "response": response.get("response", "")
-            }
-        
-        # Check for direct string response (n8n might return just a string)
+    def _parse_response(self, response: Any) -> Dict[str, Any]:
+        # Check for direct string response first
         if isinstance(response, str):
+            logger.debug(f"Response is a string: {response}")
             return {
                 "type": "text",
                 "text": response,
@@ -187,8 +191,30 @@ class N8NClient:
                 "metadata": {}
             }
         
-        # Check for various response formats
-        if "text" in response or "message" in response or "response" in response or "output" in response or "result" in response:
+        # Log the raw response for debugging if it's a dict
+        if isinstance(response, dict):
+            try:
+                logger.debug(f"Raw n8n response: {json.dumps(response, indent=2)}")
+            except (TypeError, ValueError) as e:
+                logger.debug(f"Raw n8n response (can't serialize): {response}")
+        
+        if isinstance(response, dict) and "error" in response:
+            return {
+                "type": "error",
+                "error": response.get("error"),
+                "message": response.get("message", "An error occurred")
+            }
+        
+        if isinstance(response, dict) and "tool_calls" in response:
+            return {
+                "type": "tool_calls",
+                "tool_calls": response["tool_calls"],
+                "text": response.get("text", ""),
+                "response": response.get("response", "")
+            }
+        
+        # Check for various response formats (only if response is a dict)
+        if isinstance(response, dict) and ("text" in response or "message" in response or "response" in response or "output" in response or "result" in response):
             text = (response.get("text") or 
                    response.get("message") or 
                    response.get("response") or 
@@ -201,8 +227,8 @@ class N8NClient:
                 "metadata": response.get("metadata", {})
             }
         
-        # If response has any keys at all, try to extract text from them
-        if response:
+        # If response is a dict with any keys, try to extract text from them
+        if isinstance(response, dict) and response:
             # Try to find any text-like field
             for key in ["content", "answer", "reply", "data"]:
                 if key in response:
