@@ -213,18 +213,6 @@ class N8NClient:
             if len(response) > 0:
                 # Take the first item
                 first_item = response[0]
-                # If it has an output field, extract from there
-                if isinstance(first_item, dict) and "output" in first_item:
-                    output = first_item["output"]
-                    if isinstance(output, dict):
-                        # Extract response text from output
-                        text = output.get("response") or output.get("text") or output.get("message", "")
-                        return {
-                            "type": "text",
-                            "text": text,
-                            "response": text,
-                            "metadata": output
-                        }
                 # Otherwise try to parse the first item directly
                 return self._parse_response(first_item)
             else:
@@ -253,12 +241,31 @@ class N8NClient:
                 "response": response.get("response", "")
             }
         
+        # Check for output field (n8n format)
+        if isinstance(response, dict) and "output" in response:
+            output = response["output"]
+            if isinstance(output, dict):
+                # Extract response text from output
+                text = output.get("response") or output.get("text") or output.get("message", "")
+                return {
+                    "type": "text",
+                    "text": text,
+                    "response": text,
+                    "metadata": output
+                }
+            elif isinstance(output, str):
+                return {
+                    "type": "text",
+                    "text": output,
+                    "response": output,
+                    "metadata": {}
+                }
+        
         # Check for various response formats (only if response is a dict)
-        if isinstance(response, dict) and ("text" in response or "message" in response or "response" in response or "output" in response or "result" in response):
+        if isinstance(response, dict) and ("text" in response or "message" in response or "response" in response or "result" in response):
             text = (response.get("text") or 
                    response.get("message") or 
                    response.get("response") or 
-                   response.get("output") or 
                    response.get("result", ""))
             return {
                 "type": "text",
