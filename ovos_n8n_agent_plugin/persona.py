@@ -1,7 +1,6 @@
 import asyncio
 from typing import Optional, Dict, Any, List
 from ovos_plugin_manager.templates.persona import Persona
-from ovos_plugin_manager.templates.solvers import QuestionSolver
 from ovos_utils.log import LOG
 from .n8n_client import N8NClient
 from .command_processor import CommandProcessor
@@ -9,7 +8,7 @@ from .command_processor import CommandProcessor
 logger = LOG.create_logger(__name__)
 
 
-class N8NJarvisPersona(Persona, QuestionSolver):
+class N8NJarvisPersona(Persona):
     """
     JARVIS Persona implementation using n8n workflows
     Processes all queries through n8n webhook for AI agent handling
@@ -86,8 +85,18 @@ class N8NJarvisPersona(Persona, QuestionSolver):
             response = self.n8n_client.send_query_sync(utterance, context)
             
             if response.get("type") == "error":
-                logger.error(f"N8N error: {response.get('error')}")
-                if not self.fallback_enabled:
+                error_msg = response.get('error', 'Unknown error')
+                logger.error(f"N8N error: {error_msg}")
+                
+                # Handle specific error types
+                if "404" in str(error_msg) or "not found" in error_msg.lower():
+                    logger.error(f"N8N webhook not found at: {self.n8n_client.webhook_url}")
+                    if not self.fallback_enabled:
+                        return "Sir, I'm unable to connect to my primary systems. The webhook appears to be offline."
+                elif "timeout" in error_msg.lower():
+                    if not self.fallback_enabled:
+                        return "Sir, the response is taking longer than expected. Please try again."
+                elif not self.fallback_enabled:
                     return "I apologize Sir, but I'm experiencing technical difficulties."
                 return None
             
@@ -234,14 +243,14 @@ class N8NJarvisPersona(Persona, QuestionSolver):
     
     def get_spoken_answer(self, query: str, context: Optional[Dict] = None, lang: Optional[str] = None):
         """
-        QuestionSolver interface method - get spoken answer for a query
+        Get spoken answer for a query - implements solver interface
         This method is called by the OVOS framework
         """
         return self.get_response(query, lang, context=context)
     
     def stream_utterance(self, query: str, context: Optional[Dict] = None, lang: Optional[str] = None):
         """
-        Stream response for the QuestionSolver interface
+        Stream response - implements solver streaming interface
         Yields response chunks as they arrive
         """
         if self.enable_streaming:
@@ -250,6 +259,11 @@ class N8NJarvisPersona(Persona, QuestionSolver):
             response = self.get_response(query, lang, context=context)
             if response:
                 yield response
+    
+    @property
+    def priority(self) -> int:
+        """Return priority for this persona solver"""
+        return 100 if self.config.get("primary_persona", True) else 50
     
     def shutdown(self):
         """Clean up resources"""

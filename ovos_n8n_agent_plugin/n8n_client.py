@@ -68,13 +68,20 @@ class N8NClient:
             
         except requests.exceptions.Timeout:
             logger.error(f"N8N webhook timeout after {self.timeout} seconds")
-            return {"error": "Request timeout", "type": "timeout"}
+            return {"type": "error", "error": "Request timeout"}
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                logger.error(f"N8N webhook not found (404): {self.webhook_url}")
+                return {"type": "error", "error": f"404 - Webhook not found at {self.webhook_url}"}
+            else:
+                logger.error(f"N8N webhook HTTP error: {e}")
+                return {"type": "error", "error": f"HTTP {e.response.status_code}: {str(e)}"}
         except requests.exceptions.RequestException as e:
             logger.error(f"N8N webhook request failed: {e}")
-            return {"error": str(e), "type": "request_error"}
+            return {"type": "error", "error": str(e)}
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse N8N response: {e}")
-            return {"error": "Invalid JSON response", "type": "parse_error"}
+            return {"type": "error", "error": "Invalid JSON response from webhook"}
     
     async def send_query_async(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         payload = {
@@ -101,13 +108,20 @@ class N8NClient:
                 
         except asyncio.TimeoutError:
             logger.error(f"N8N webhook timeout after {self.timeout} seconds")
-            return {"error": "Request timeout", "type": "timeout"}
+            return {"type": "error", "error": "Request timeout"}
+        except aiohttp.ClientResponseError as e:
+            if e.status == 404:
+                logger.error(f"N8N webhook not found (404): {self.webhook_url}")
+                return {"type": "error", "error": f"404 - Webhook not found at {self.webhook_url}"}
+            else:
+                logger.error(f"N8N webhook HTTP error: {e}")
+                return {"type": "error", "error": f"HTTP {e.status}: {str(e)}"}
         except aiohttp.ClientError as e:
             logger.error(f"N8N webhook request failed: {e}")
-            return {"error": str(e), "type": "request_error"}
+            return {"type": "error", "error": str(e)}
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse N8N response: {e}")
-            return {"error": "Invalid JSON response", "type": "parse_error"}
+            return {"type": "error", "error": "Invalid JSON response from webhook"}
     
     async def stream_query(self, query: str, context: Optional[Dict] = None) -> AsyncGenerator[Dict[str, Any], None]:
         payload = {

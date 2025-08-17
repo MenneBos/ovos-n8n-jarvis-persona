@@ -17,7 +17,7 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "position": [
         -32,
-        176
+        256
       ]
     },
     {
@@ -61,67 +61,16 @@
     },
     {
       "parameters": {
-        "toolDescription": "Returns daily forecast data.",
-        "url": "  http://dataservice.accuweather.com/forecasts/v1/daily/1day/8303_PC",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "details",
-              "value": "true"
-            }
-          ]
-        },
-        "options": {}
+        "endpointUrl": "http://office.0x5f.sh:30301/mcp"
       },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.2,
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
       "position": [
-        528,
-        656
+        608,
+        576
       ],
-      "id": "53423459-a3a1-46a5-bba3-782b7df6dc73",
-      "name": "fetch daily forecast",
-      "credentials": {
-        "httpQueryAuth": {
-          "id": "Pxyh2pQIWvBTt7Np",
-          "name": "Accuweather API Key"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "toolDescription": "Returns forecast data for the next hour",
-        "url": "  http://dataservice.accuweather.com/forecasts/v1/hourly/1hour/8303_PC",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "details",
-              "value": "true"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequestTool",
-      "typeVersion": 4.2,
-      "position": [
-        752,
-        656
-      ],
-      "id": "4c77c8a9-2f34-4787-9e9b-6a3368b4c688",
-      "name": "fetch hourly forecast",
-      "credentials": {
-        "httpQueryAuth": {
-          "id": "Pxyh2pQIWvBTt7Np",
-          "name": "Accuweather API Key"
-        }
-      }
+      "id": "79b8c27a-6d87-4d6b-93eb-d339a9df2257",
+      "name": "MCP Client"
     }
   ],
   "pinData": {},
@@ -148,18 +97,7 @@
         ]
       ]
     },
-    "fetch daily forecast": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "fetch hourly forecast": {
+    "MCP Client": {
       "ai_tool": [
         [
           {
@@ -175,7 +113,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "542805b6-b207-4333-8dad-2f5ee96632e6",
+  "versionId": "3cddafd5-4f01-4baf-a39c-028a15f875de",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "4711f5cd754bb8f9a867a48ef33bed51a5448d1e04645a159bef845553dab62f"
