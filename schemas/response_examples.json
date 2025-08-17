@@ -1,0 +1,150 @@
+{
+  "examples": {
+    "simple_text": {
+      "description": "Basic text response from JARVIS",
+      "response": {
+        "response": "Sir, the current temperature is 72 degrees Fahrenheit with partly cloudy skies. Perfect weather for a test flight."
+      }
+    },
+    "alternative_text_fields": {
+      "description": "Text response using alternative field names",
+      "examples": [
+        {
+          "text": "Certainly Sir, I'll compile that data for you immediately."
+        },
+        {
+          "message": "The arc reactor is operating at optimal efficiency, Sir."
+        }
+      ]
+    },
+    "timer_command": {
+      "description": "Setting a timer with JARVIS response",
+      "response": {
+        "response": "Setting a 5-minute timer for you, Sir. I'll alert you when it's complete.",
+        "tool_calls": [
+          {
+            "tool": "timer",
+            "action": "start",
+            "params": {
+              "duration": 300,
+              "label": "Workshop timer"
+            }
+          }
+        ]
+      }
+    },
+    "alarm_command": {
+      "description": "Setting an alarm",
+      "response": {
+        "response": "I've set your alarm for 7 AM tomorrow, Sir. Time to rise and shine.",
+        "tool_calls": [
+          {
+            "tool": "alarm",
+            "action": "set",
+            "params": {
+              "time": "07:00",
+              "label": "Morning wake-up",
+              "repeat": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+            }
+          }
+        ]
+      }
+    },
+    "music_playback": {
+      "description": "Playing music through Spotify",
+      "response": {
+        "response": "Playing AC/DC as requested, Sir. Nothing like some classic rock for the workshop.",
+        "tool_calls": [
+          {
+            "tool": "spotify",
+            "action": "play",
+            "params": {
+              "query": "AC/DC",
+              "type": "artist"
+            }
+          }
+        ]
+      }
+    },
+    "multiple_tools": {
+      "description": "Response with multiple tool calls",
+      "response": {
+        "response": "Setting up your morning routine, Sir. Timer for coffee and your workout playlist ready.",
+        "tool_calls": [
+          {
+            "tool": "timer",
+            "action": "start",
+            "params": {
+              "duration": 240,
+              "label": "Coffee brewing"
+            }
+          },
+          {
+            "tool": "spotify",
+            "action": "play",
+            "params": {
+              "playlist": "Workout Mix"
+            }
+          }
+        ]
+      }
+    },
+    "error_response": {
+      "description": "Error when service is unavailable",
+      "response": {
+        "error": "service_unavailable",
+        "message": "I apologize Sir, but I'm experiencing connectivity issues with that service."
+      }
+    },
+    "weather_info": {
+      "description": "Weather information response",
+      "response": {
+        "response": "The forecast shows clear skies tomorrow, Sir. Temperature will reach 78 degrees. Perfect conditions for testing the Mark 52.",
+        "metadata": {
+          "source": "weather_api",
+          "location": "Malibu, CA",
+          "timestamp": "2024-01-15T10:30:00Z"
+        }
+      }
+    },
+    "movie_info": {
+      "description": "Movie information response",
+      "response": {
+        "response": "Sir, 'Oppenheimer' and 'Barbie' are the top films in theaters this week. Though I suspect you'd prefer the one about the brilliant inventor.",
+        "metadata": {
+          "source": "movie_db",
+          "count": 2
+        }
+      }
+    },
+    "calculation": {
+      "description": "Math calculation response",
+      "response": {
+        "response": "The calculation yields 1,337, Sir. The repulsor array efficiency would increase by approximately 15.7%."
+      }
+    },
+    "streaming_chunk": {
+      "description": "Example streaming response chunk (for WebSocket connections)",
+      "response": {
+        "chunk": "Analyzing the situation",
+        "done": false
+      }
+    },
+    "streaming_complete": {
+      "description": "Final streaming response with tool calls",
+      "response": {
+        "chunk": "I've completed the analysis, Sir.",
+        "done": true,
+        "tool_calls": [
+          {
+            "tool": "timer",
+            "action": "start",
+            "params": {
+              "duration": 600
+            }
+          }
+        ]
+      }
+    }
+  }
+}

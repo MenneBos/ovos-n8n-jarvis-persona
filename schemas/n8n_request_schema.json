@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "N8N JARVIS Webhook Request",
+  "description": "Schema for requests sent to n8n webhook from JARVIS persona",
+  "type": "object",
+  "required": ["message", "session_id"],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "The user's query or command",
+      "examples": [
+        "What movies are in theaters right now?",
+        "Set a timer for 5 minutes",
+        "Play some music",
+        "What's the weather like?"
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Session identifier for conversation context (format: prefix-YYYY-MM-DD for daily sessions)",
+      "pattern": "^[a-zA-Z0-9]+-\\d{4}-\\d{2}-\\d{2}$",
+      "examples": ["jarvis-2024-01-15", "jarvis-test-2024-01-15"]
+    },
+    "context": {
+      "type": "object",
+      "description": "Optional context information",
+      "properties": {
+        "skill_id": {
+          "type": "string",
+          "description": "OVOS skill identifier"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source of the request"
+        },
+        "destination": {
+          "type": "string",
+          "description": "Destination for the response"
+        },
+        "user_id": {
+          "type": "string",
+          "description": "Optional user identifier"
+        },
+        "device_id": {
+          "type": "string",
+          "description": "Optional device identifier"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

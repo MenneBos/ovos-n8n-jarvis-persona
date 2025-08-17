@@ -1,6 +1,7 @@
 import asyncio
 from typing import Optional, Dict, Any, List
 from ovos_plugin_manager.templates.persona import Persona
+from ovos_plugin_manager.templates.solvers import QuestionSolver
 from ovos_utils.log import LOG
 from .n8n_client import N8NClient
 from .command_processor import CommandProcessor
@@ -8,7 +9,7 @@ from .command_processor import CommandProcessor
 logger = LOG.create_logger(__name__)
 
 
-class N8NJarvisPersona(Persona):
+class N8NJarvisPersona(Persona, QuestionSolver):
     """
     JARVIS Persona implementation using n8n workflows
     Processes all queries through n8n webhook for AI agent handling
@@ -35,6 +36,9 @@ class N8NJarvisPersona(Persona):
         self.process_tools = self.config.get("process_tools", True)
         self.return_text_only = self.config.get("return_text_only", False)
         self.fallback_enabled = self.config.get("fallback_enabled", True)
+        
+        # Override solver to avoid FailureSolver issues
+        self.solvers = []  # Don't use any external solvers
         
         logger.info(f"N8N JARVIS Persona initialized with webhook: {self.n8n_client.webhook_url}")
     
@@ -227,6 +231,25 @@ class N8NJarvisPersona(Persona):
         }
         
         self.bus.emit(self.bus.message(event_type, event_data))
+    
+    def get_spoken_answer(self, query: str, context: Optional[Dict] = None, lang: Optional[str] = None):
+        """
+        QuestionSolver interface method - get spoken answer for a query
+        This method is called by the OVOS framework
+        """
+        return self.get_response(query, lang, context=context)
+    
+    def stream_utterance(self, query: str, context: Optional[Dict] = None, lang: Optional[str] = None):
+        """
+        Stream response for the QuestionSolver interface
+        Yields response chunks as they arrive
+        """
+        if self.enable_streaming:
+            yield from self.get_response_streaming(query, lang, context=context)
+        else:
+            response = self.get_response(query, lang, context=context)
+            if response:
+                yield response
     
     def shutdown(self):
         """Clean up resources"""

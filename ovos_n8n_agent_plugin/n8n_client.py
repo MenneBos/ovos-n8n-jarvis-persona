@@ -157,13 +157,15 @@ class N8NClient:
             return {
                 "type": "tool_calls",
                 "tool_calls": response["tool_calls"],
-                "text": response.get("text", "")
+                "text": response.get("text", ""),
+                "response": response.get("response", "")
             }
         
-        if "text" in response or "message" in response:
+        if "text" in response or "message" in response or "response" in response:
             return {
                 "type": "text",
-                "text": response.get("text") or response.get("message", ""),
+                "text": response.get("text") or response.get("message") or response.get("response", ""),
+                "response": response.get("response", ""),
                 "metadata": response.get("metadata", {})
             }
         
