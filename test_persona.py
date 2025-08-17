@@ -6,6 +6,8 @@ Tests the persona without running the full OVOS stack
 
 import json
 import logging
+import os
+from pathlib import Path
 from ovos_n8n_agent_plugin.persona import N8NJarvisPersona
 
 # Set up logging
@@ -14,20 +16,35 @@ logging.basicConfig(level=logging.DEBUG)
 def test_persona():
     """Test the JARVIS persona with sample queries"""
     
-    # Create test configuration
-    config = {
-        "name": "JARVIS",
-        "description": "Just A Rather Very Intelligent System",
-        "webhook_url": "http://localhost:5678/webhook/jarvis",  # Update with your n8n URL
-        "primary_persona": True,
-        "enable_streaming": False,  # Disable streaming for simple test
-        "process_tools": True,
-        "return_text_only": False,
-        "fallback_enabled": True,
-        "use_daily_session": True,
-        "session_id_prefix": "jarvis-test",
-        "timeout": 30
-    }
+    # Load configuration from ~/.config/ovos_persona/jarvis.json
+    config_path = Path.home() / ".config" / "ovos_persona" / "jarvis.json"
+    
+    if config_path.exists():
+        print(f"Loading config from {config_path}")
+        with open(config_path, 'r') as f:
+            full_config = json.load(f)
+            # Extract the n8n config section
+            config = full_config.get("ovos-n8n-jarvis-persona", {})
+            config["name"] = full_config.get("name", "JARVIS")
+            config["description"] = full_config.get("description", "Just A Rather Very Intelligent System")
+    else:
+        print(f"Config file not found at {config_path}, using defaults")
+        # Fallback configuration
+        config = {
+            "name": "JARVIS",
+            "description": "Just A Rather Very Intelligent System",
+            "webhook_url": "https://n8n.0x5f.sh/webhook/3eb829d2-c64c-479e-a0e2-ed6f7d1aa052",
+            "primary_persona": True,
+            "enable_streaming": False,  # Disable streaming for simple test
+            "process_tools": True,
+            "return_text_only": False,
+            "fallback_enabled": True,
+            "use_daily_session": True,
+            "session_id_prefix": "jarvis-test",
+            "timeout": 30
+        }
+    
+    print(f"Using webhook URL: {config.get('webhook_url')}")
     
     # Initialize persona
     print("Initializing JARVIS Persona...")
@@ -48,13 +65,13 @@ def test_persona():
     for query in test_queries:
         print(f"Query: {query}")
         
-        # Test match confidence
-        confidence = persona.match(query)
-        print(f"Match confidence: {confidence}")
-        
-        # Get response
+        # Get response using ChatMessageSolver interface
         try:
-            response = persona.get_response(query)
+            # Format as chat messages
+            messages = [
+                {"role": "user", "content": query}
+            ]
+            response = persona.get_chat_completion(messages, lang="en-US")
             if response:
                 print(f"Response: {response}")
             else:
@@ -64,8 +81,6 @@ def test_persona():
         
         print("-"*40 + "\n")
     
-    # Cleanup
-    persona.shutdown()
     print("Test complete!")
 
 if __name__ == "__main__":
