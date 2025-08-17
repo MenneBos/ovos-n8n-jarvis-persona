@@ -1,6 +1,6 @@
 import asyncio
 from typing import Optional, Dict, Any, List
-from ovos_plugin_manager.persona import Persona
+from ovos_plugin_manager.templates.solvers import ChatMessageSolver
 from ovos_utils.log import LOG
 from .n8n_client import N8NClient
 from .command_processor import CommandProcessor
@@ -8,23 +8,22 @@ from .command_processor import CommandProcessor
 logger = LOG.create_logger(__name__)
 
 
-class N8NJarvisPersona(Persona):
+class N8NJarvisPersona(ChatMessageSolver):
     """
     JARVIS Persona implementation using n8n workflows
     Processes all queries through n8n webhook for AI agent handling
     """
     
     def __init__(self, config: Optional[Dict[str, Any]] = None, 
-                 bus=None, lang="en-us"):
+                 translator=None, detector=None, priority=50,
+                 enable_tx=False, enable_cache=True, 
+                 internal_lang=None):
         """Initialize JARVIS persona with n8n integration"""
         
-        # Set persona name and description
-        name = config.get("name", "JARVIS")
-        description = config.get("description", 
-                               "Just A Rather Very Intelligent System - Tony Stark's AI assistant")
-        
-        super().__init__(name=name, description=description, config=config, 
-                        bus=bus, lang=lang)
+        super().__init__(config=config, translator=translator, 
+                        detector=detector, priority=priority,
+                        enable_tx=enable_tx, enable_cache=enable_cache,
+                        internal_lang=internal_lang)
         
         # Initialize n8n client and command processor
         self.n8n_client = N8NClient(self.config)
@@ -41,28 +40,24 @@ class N8NJarvisPersona(Persona):
         
         logger.info(f"N8N JARVIS Persona initialized with webhook: {self.n8n_client.webhook_url}")
     
-    def match(self, utterance: str, lang: str = None, message=None) -> Optional[float]:
+    def get_chat_completion(self, messages: List[Dict[str, str]], 
+                           lang: str = "en-US") -> str:
         """
-        Determine if this persona should handle the utterance
-        Returns confidence score (0.0 to 1.0) or None
+        Main method for ChatMessageSolver - processes chat messages
         """
-        # If configured as primary persona, always match with high confidence
-        if self.config.get("primary_persona", True):
-            return 0.95
+        # Extract the last user message
+        user_message = ""
+        for msg in reversed(messages):
+            if msg.get("role") == "user":
+                user_message = msg.get("content", "")
+                break
         
-        # Otherwise, only match if utterance contains wake words or triggers
-        wake_words = self.config.get("wake_words", ["jarvis", "hey jarvis"])
-        utterance_lower = utterance.lower()
+        if not user_message:
+            return "I didn't receive a message to process, Sir."
         
-        for wake_word in wake_words:
-            if wake_word in utterance_lower:
-                return 0.9
-        
-        # If fallback is enabled, provide low confidence match
-        if self.fallback_enabled:
-            return 0.3
-        
-        return None
+        # Process through n8n
+        response = self.get_response(user_message, lang=lang)
+        return response or "I'm unable to process that request at the moment, Sir."
     
     def get_response(self, utterance: str, lang: str = None, 
                     message=None, context: Optional[Dict] = None) -> Optional[str]:
