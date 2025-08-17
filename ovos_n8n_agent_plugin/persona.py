@@ -1,6 +1,6 @@
 import asyncio
 from typing import Optional, Dict, Any, List
-from ovos_plugin_manager.templates.persona import Persona
+from ovos_plugin_manager.persona import Persona
 from ovos_utils.log import LOG
 from .n8n_client import N8NClient
 from .command_processor import CommandProcessor
