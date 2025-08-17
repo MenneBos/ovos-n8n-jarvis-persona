@@ -50,8 +50,11 @@ Homepage = "https://github.com/reklis/ovos-n8n-jarvis-persona"
 Repository = "https://github.com/reklis/ovos-n8n-jarvis-persona.git"
 Issues = "https://github.com/reklis/ovos-n8n-jarvis-persona/issues"
 
-[project.entry-points."ovos.plugin.persona"]
-ovos-n8n-jarvis-persona = "ovos_n8n_agent_plugin.persona:N8NJarvisPersona"
+[project.entry-points."opm.solver"]
+ovos-n8n-jarvis-solver = "ovos_n8n_agent_plugin.solver:N8NJarvisSolver"
+
+[project.entry-points."opm.persona"]
+jarvis = "ovos_n8n_agent_plugin.persona_config:get_jarvis_persona"
 
 [tool.hatch.build.targets.wheel]
 packages = ["ovos_n8n_agent_plugin"]

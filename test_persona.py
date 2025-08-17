@@ -1,69 +1,63 @@
 #!/usr/bin/env python3
 """
-Test script for N8N JARVIS Persona
-Tests the persona without running the full OVOS stack
+Test script for N8N JARVIS Solver
+Tests the solver without running the full OVOS stack
 """
 
 import json
 import logging
-import os
+import sys
 from pathlib import Path
-from ovos_n8n_agent_plugin.persona import N8NJarvisPersona
+from ovos_n8n_agent_plugin.solver import N8NJarvisSolver
+from ovos_n8n_agent_plugin.persona_config import get_jarvis_persona
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
-def test_persona():
-    """Test the JARVIS persona with sample queries"""
+def test_solver():
+    """Test the JARVIS solver with sample queries"""
     
-    # Load configuration from ~/.config/ovos_persona/jarvis.json
-    config_path = Path.home() / ".config" / "ovos_persona" / "jarvis.json"
+    # Load configuration using the same method as the persona plugin
+    print("Loading JARVIS persona configuration...")
+    persona_config = get_jarvis_persona()
     
-    if config_path.exists():
-        print(f"Loading config from {config_path}")
-        with open(config_path, 'r') as f:
-            full_config = json.load(f)
-            # Extract the n8n config section
-            config = full_config.get("ovos-n8n-jarvis-persona", {})
-            config["name"] = full_config.get("name", "JARVIS")
-            config["description"] = full_config.get("description", "Just A Rather Very Intelligent System")
-    else:
-        print(f"Config file not found at {config_path}, using defaults")
-        # Fallback configuration
-        config = {
-            "name": "JARVIS",
-            "description": "Just A Rather Very Intelligent System",
-            "webhook_url": "https://n8n.0x5f.sh/webhook/3eb829d2-c64c-479e-a0e2-ed6f7d1aa052",
-            "primary_persona": True,
-            "enable_streaming": False,  # Disable streaming for simple test
-            "process_tools": True,
-            "return_text_only": False,
-            "fallback_enabled": True,
-            "use_daily_session": True,
-            "session_id_prefix": "jarvis-test",
-            "timeout": 30
-        }
+    # Extract solver configuration
+    solver_config = persona_config.get("ovos-n8n-jarvis-solver", {})
     
-    print(f"Using webhook URL: {config.get('webhook_url')}")
+    print(f"Persona Name: {persona_config.get('name')}")
+    print(f"Description: {persona_config.get('description')}")
+    print(f"Using webhook URL: {solver_config.get('webhook_url')}")
+    print(f"Session prefix: {solver_config.get('session_id_prefix')}")
+    print("-" * 50)
     
-    # Initialize persona
-    print("Initializing JARVIS Persona...")
-    persona = N8NJarvisPersona(config=config)
+    # Initialize solver
+    print("\nInitializing JARVIS Solver...")
+    try:
+        solver = N8NJarvisSolver(config=solver_config)
+        print("✓ Solver initialized successfully")
+    except Exception as e:
+        print(f"✗ Failed to initialize solver: {e}")
+        sys.exit(1)
     
     # Test queries
     test_queries = [
         "What movies are in theaters right now?",
         "What's the weather like today?",
         "Set a timer for 5 minutes",
-        "Play some music"
+        "Play some music",
+        "What time is it?",
+        "Tell me a joke"
     ]
     
     print("\n" + "="*50)
-    print("Testing JARVIS Persona")
+    print("Testing JARVIS Solver")
     print("="*50 + "\n")
     
-    for query in test_queries:
-        print(f"Query: {query}")
+    for i, query in enumerate(test_queries, 1):
+        print(f"[{i}/{len(test_queries)}] Query: {query}")
         
         # Get response using ChatMessageSolver interface
         try:
@@ -71,17 +65,42 @@ def test_persona():
             messages = [
                 {"role": "user", "content": query}
             ]
-            response = persona.get_chat_completion(messages, lang="en-US")
+            
+            print("  Sending to N8N webhook...")
+            response = solver.get_chat_completion(messages, lang="en-US")
+            
             if response:
-                print(f"Response: {response}")
+                print(f"  ✓ Response: {response[:200]}{'...' if len(response) > 200 else ''}")
             else:
-                print("No response received")
+                print("  ✗ No response received")
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"  ✗ Error: {e}")
         
-        print("-"*40 + "\n")
+        print("-"*50 + "\n")
     
+    # Test streaming if enabled
+    if solver_config.get("enable_streaming", False):
+        print("Testing streaming response...")
+        try:
+            messages = [{"role": "user", "content": "Tell me about JARVIS from Iron Man"}]
+            print("  Streaming: ", end="", flush=True)
+            for chunk in solver.stream_utterances(messages, lang="en-US"):
+                print(chunk, end="", flush=True)
+            print("\n")
+        except Exception as e:
+            print(f"\n  ✗ Streaming error: {e}")
+    
+    # Cleanup
+    print("\nShutting down solver...")
+    try:
+        solver.shutdown()
+        print("✓ Solver shutdown complete")
+    except Exception as e:
+        print(f"✗ Shutdown error: {e}")
+    
+    print("\n" + "="*50)
     print("Test complete!")
+    print("="*50)
 
 if __name__ == "__main__":
-    test_persona()
+    test_solver()
