@@ -20,13 +20,14 @@ class N8NJarvisPersona(ChatMessageSolver):
                  internal_lang=None):
         """Initialize JARVIS persona with n8n integration"""
         
-        # Initialize priority attribute before super().__init__
-        self._priority = priority
-        
+        # Don't pass priority to parent, handle it ourselves
         super().__init__(config=config, translator=translator, 
-                        detector=detector, priority=priority,
+                        detector=detector, priority=100,
                         enable_tx=enable_tx, enable_cache=enable_cache,
                         internal_lang=internal_lang)
+        
+        # Set our priority after initialization
+        self.priority = priority or 100
         
         # Initialize n8n client and command processor
         self.n8n_client = N8NClient(self.config)
@@ -42,16 +43,6 @@ class N8NJarvisPersona(ChatMessageSolver):
         self.solvers = []  # Don't use any external solvers
         
         logger.info(f"N8N JARVIS Persona initialized with webhook: {self.n8n_client.webhook_url}")
-    
-    @property
-    def priority(self):
-        """Get the priority of this solver"""
-        return getattr(self, '_priority', 100)
-    
-    @priority.setter
-    def priority(self, value):
-        """Set the priority of this solver"""
-        self._priority = value
     
     def get_chat_completion(self, messages: List[Dict[str, str]], 
                            lang: str = "en-US") -> str:
