@@ -56,10 +56,6 @@ htmlcov/
 *.log
 logs/
 
-# Config overrides (keep example configs)
-config/*.json
-!config/n8n_agent.json
-
 # Local development
 .local/
 tmp/
