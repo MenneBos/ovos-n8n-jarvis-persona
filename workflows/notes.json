@@ -1,0 +1,293 @@
+{
+  "name": "notes",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.command }}",
+        "options": {
+          "systemMessage": "You are a note taking assistant and secretary managing a users personal notes archive.  You can save notes, search notes, and archive notes with the available tools.  You can also append blocks to existing notes and read back the contents of existing notes. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        -64
+      ],
+      "id": "4d4ac434-d7ea-4614-a693-414313b7cf49",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        160
+      ],
+      "id": "ec57c723-c126-424a-a041-b89a12b2b4f4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEKyyg8dt15AQjsD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "value": "=https://www.notion.so/Jarvis-254e46db08c580fe80c7dabeaf14b23c",
+          "mode": "url"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', `title of the page`, 'string') }}",
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "heading_1",
+              "textContent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('blockValues0_Text', `heading for the page`, 'string') }}"
+            },
+            {
+              "textContent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('blockValues1_Text', `Paragraph body of the page`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        160
+      ],
+      "id": "7329d5e0-4d63-4ffb-bbc1-5303c7746595",
+      "name": "Create a page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Text', `search query`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        160
+      ],
+      "id": "17f15ced-8a94-42fa-b976-0537d6f6e504",
+      "name": "Search a page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "archive",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Page', `URL of notion page`, 'string') }}",
+          "mode": "url"
+        }
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        160
+      ],
+      "id": "19414d9e-12c7-4063-bf52-0dcf79e461bc",
+      "name": "Archive page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "operation": "getAll",
+        "blockId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Block', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        160
+      ],
+      "id": "54043341-91e6-4644-aa39-d75935ea44d3",
+      "name": "Get many child blocks in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "blockId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Block', ``, 'string') }}"
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "textContent": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('blockValues0_Text', `text of new note block to be saved`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        160
+      ],
+      "id": "47e6a7a8-82b6-4756-83fa-1893965fb2c2",
+      "name": "Append a block in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "command"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "1264192c-e4ae-4a61-bd2b-b759d8969c68",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search a page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many child blocks in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append a block in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "56dac720-e78f-4883-bad4-03eac3f65112",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4711f5cd754bb8f9a867a48ef33bed51a5448d1e04645a159bef845553dab62f"
+  },
+  "id": "3RmZUhi6aKBMmdRk",
+  "tags": []
+}
