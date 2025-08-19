@@ -3,7 +3,7 @@
   "title": "N8N JARVIS Webhook Request",
   "description": "Schema for requests sent to n8n webhook from JARVIS persona",
   "type": "object",
-  "required": ["message", "session_id"],
+  "required": ["message", "session_id", "current_time", "location"],
   "properties": {
     "message": {
       "type": "string",
@@ -20,6 +20,39 @@
       "description": "Session identifier for conversation context (format: prefix-YYYY-MM-DD for daily sessions)",
       "pattern": "^[a-zA-Z0-9]+-\\d{4}-\\d{2}-\\d{2}$",
       "examples": ["jarvis-2024-01-15", "jarvis-test-2024-01-15"]
+    },
+    "current_time": {
+      "type": "string",
+      "description": "Current timestamp in ISO 8601 format",
+      "format": "date-time",
+      "examples": ["2024-01-15T14:30:00.000Z", "2024-01-15T09:30:00-05:00"]
+    },
+    "location": {
+      "type": "object",
+      "description": "User's location information from config",
+      "required": ["city", "country"],
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "City name",
+          "examples": ["New York", "Los Angeles", "London"]
+        },
+        "state": {
+          "type": "string",
+          "description": "State or province",
+          "examples": ["NY", "CA", "England"]
+        },
+        "country": {
+          "type": "string",
+          "description": "Country name or code",
+          "examples": ["USA", "United States", "UK"]
+        },
+        "timezone": {
+          "type": "string",
+          "description": "Timezone identifier",
+          "examples": ["America/New_York", "America/Los_Angeles", "Europe/London"]
+        }
+      }
     },
     "context": {
       "type": "object",

@@ -152,6 +152,13 @@ Your n8n webhook receives:
 {
   "message": "user's spoken command",
   "session_id": "jarvis-2025-01-17",
+  "current_time": "2025-01-17T14:30:00.000Z",
+  "location": {
+    "city": "New York",
+    "state": "NY",
+    "country": "USA",
+    "timezone": "America/New_York"
+  },
   "context": {}
 }
 ```

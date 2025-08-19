@@ -17,6 +17,12 @@ class N8NClient:
         self.timeout = config.get("timeout", 30)
         self.use_daily_session = config.get("use_daily_session", True)
         self.session_id_prefix = config.get("session_id_prefix", "jarvis")
+        self.location = config.get("location", {
+            "city": "Unknown",
+            "state": "Unknown",
+            "country": "Unknown",
+            "timezone": "UTC"
+        })
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -47,7 +53,9 @@ class N8NClient:
     def send_query_sync(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         payload = {
             "message": query,
-            "session_id": self._get_session_id()
+            "session_id": self._get_session_id(),
+            "current_time": datetime.now().isoformat(),
+            "location": self.location
         }
         
         if context:
@@ -123,7 +131,9 @@ class N8NClient:
     async def send_query_async(self, query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
         payload = {
             "message": query,
-            "session_id": self._get_session_id()
+            "session_id": self._get_session_id(),
+            "current_time": datetime.now().isoformat(),
+            "location": self.location
         }
         
         if context:
@@ -164,7 +174,9 @@ class N8NClient:
         payload = {
             "message": query,
             "session_id": self._get_session_id(),
-            "stream": True
+            "stream": True,
+            "current_time": datetime.now().isoformat(),
+            "location": self.location
         }
         
         if context:

@@ -15,6 +15,12 @@
     "max_retries": 3,
     "wake_words": ["jarvis", "hey jarvis", "okay jarvis"],
     "api_key": "",
-    "comment": "Copy this file to ~/.config/ovos_persona/jarvis.json and update webhook_url"
+    "location": {
+      "city": "New York",
+      "state": "NY",
+      "country": "USA",
+      "timezone": "America/New_York"
+    },
+    "comment": "Copy this file to ~/.config/ovos_persona/jarvis.json and update webhook_url and location"
   }
 }
