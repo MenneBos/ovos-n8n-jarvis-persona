@@ -46,7 +46,6 @@ def test_solver():
     test_queries = [
         "What movies are in theaters right now?",
         "What's the weather like today?",
-        "Set a timer for 5 minutes",
         "Play some music",
         "What time is it?",
         "Tell me a joke"

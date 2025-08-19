@@ -1,141 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "N8N JARVIS Webhook Response",
-  "description": "Schema for n8n webhook responses to JARVIS persona queries",
-  "oneOf": [
-    {
-      "type": "object",
-      "title": "Text Response",
-      "description": "Simple text response from JARVIS",
-      "properties": {
-        "text": {
-          "type": "string",
-          "description": "The text response from JARVIS"
-        },
-        "response": {
-          "type": "string",
-          "description": "Alternative field for text response"
-        },
-        "message": {
-          "type": "string",
-          "description": "Another alternative field for text response"
-        },
-        "metadata": {
-          "type": "object",
-          "description": "Optional metadata about the response",
-          "additionalProperties": true
-        }
-      },
-      "anyOf": [
-        {"required": ["text"]},
-        {"required": ["response"]},
-        {"required": ["message"]}
-      ]
-    },
-    {
-      "type": "object",
-      "title": "Tool Call Response",
-      "description": "Response with tool calls for JARVIS to execute",
-      "required": ["tool_calls"],
-      "properties": {
-        "tool_calls": {
-          "type": "array",
-          "description": "Array of tool calls to execute",
-          "items": {
-            "type": "object",
-            "required": ["tool", "action"],
-            "properties": {
-              "tool": {
-                "type": "string",
-                "description": "Tool name (e.g., timer, alarm, spotify, weather)",
-                "enum": ["timer", "alarm", "spotify", "weather", "calculator", "movies"]
-              },
-              "action": {
-                "type": "string",
-                "description": "Action to perform with the tool",
-                "examples": ["start", "stop", "set", "cancel", "play", "pause", "search"]
-              },
-              "params": {
-                "type": "object",
-                "description": "Parameters for the tool action",
-                "additionalProperties": true,
-                "examples": [
-                  {"duration": 300, "label": "Pizza timer"},
-                  {"time": "08:00", "label": "Morning alarm"},
-                  {"query": "Iron Man soundtrack"}
-                ]
-              }
-            }
-          }
-        },
-        "text": {
-          "type": "string",
-          "description": "Optional text response to accompany tool calls"
-        },
-        "response": {
-          "type": "string",
-          "description": "Optional JARVIS response text with tool calls"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "title": "Error Response",
-      "description": "Error response from n8n webhook",
-      "required": ["error"],
-      "properties": {
-        "error": {
-          "type": "string",
-          "description": "Error message or error type"
-        },
-        "message": {
-          "type": "string",
-          "description": "Human-readable error message"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "title": "Streaming Response",
-      "description": "Response for streaming scenarios",
-      "properties": {
-        "chunk": {
-          "type": "string",
-          "description": "Text chunk for streaming"
-        },
-        "done": {
-          "type": "boolean",
-          "description": "Indicates if streaming is complete"
-        },
-        "tool_calls": {
-          "type": "array",
-          "description": "Tool calls (sent when streaming is done)",
-          "items": {
-            "$ref": "#/definitions/toolCall"
-          }
-        }
-      }
+  "description": "Simple schema for n8n webhook responses to JARVIS persona queries",
+  "type": "object",
+  "properties": {
+    "response": {
+      "type": "string",
+      "description": "The text response from JARVIS"
     }
-  ],
-  "definitions": {
-    "toolCall": {
-      "type": "object",
-      "required": ["tool", "action"],
-      "properties": {
-        "tool": {
-          "type": "string",
-          "description": "Tool name"
-        },
-        "action": {
-          "type": "string",
-          "description": "Action to perform"
-        },
-        "params": {
-          "type": "object",
-          "description": "Tool parameters",
-          "additionalProperties": true
-        }
-      }
+  },
+  "required": ["response"],
+  "examples": [
+    {
+      "response": "My pleasure, Sir"
+    },
+    {
+      "response": "Right away, Sir. I'll handle that for you."
+    },
+    {
+      "response": "Of course, Sir. Consider it done."
     }
-  }
+  ]
 }

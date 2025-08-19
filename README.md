@@ -7,21 +7,18 @@ A sophisticated OVOS Persona plugin that embodies JARVIS from Iron Man, processi
 - **JARVIS Persona**: Full character embodiment of Tony Stark's AI assistant
 - **N8N Webhook Integration**: All queries processed through n8n workflows
 - **Daily Session Management**: Automatic session rotation for context management
-- **Tool Command Processing**: Local execution of timers, alarms, and delegated tools
+- **Simple Response Processing**: Clean text responses from n8n workflows
 - **Streaming Support**: Natural speech with streamed responses
 - **Primary Interface**: Can replace standard OVOS intent system
 
-## Supported Tools
+## N8N Integration
 
-### Local Tools (Handled by Plugin)
-- **Timer**: Start, stop, pause, resume, status, clear timers
-- **Alarm**: Set, cancel, snooze, list, enable/disable alarms
-
-### Delegated Tools (Via N8N Sub-workflows)
-- **Spotify Music**: All music playback via spotify_music sub-workflow
-- **Weather**: Current conditions and forecasts via weather sub-workflow
-- **Movies**: Movie information via movies MCP tool
-- **Calculator**: Math calculations via calculator MCP tool
+All functionality is handled by the n8n server through simple request/response:
+- **Music Control**: Handled by n8n workflows
+- **Weather**: Processed through n8n AI agents
+- **Movies**: Information via n8n integrations
+- **Calculations**: Math and conversions via n8n
+- **General Queries**: All processed by n8n AI with JARVIS personality
 
 ## Installation
 
@@ -113,7 +110,7 @@ Add to your mycroft.conf (`~/.config/mycroft/mycroft.conf`):
 | `webhook_url` | Required | Your n8n webhook endpoint URL |
 | `primary_persona` | `true` | If true, handles all queries |
 | `enable_streaming` | `true` | Enable streaming responses |
-| `process_tools` | `true` | Process tool commands from n8n |
+| `process_tools` | `false` | Reserved for future use |
 | `return_text_only` | `false` | Return only text without tool execution |
 | `fallback_enabled` | `true` | Act as fallback when not primary |
 | `use_daily_session` | `true` | Create new session each day |
@@ -162,13 +159,7 @@ Your n8n webhook receives:
 And should return:
 ```json
 {
-  "response": "Certainly Sir, I'll set that timer for you.",
-  "tool": "timer",
-  "action": "start",
-  "params": {
-    "duration": 300000,
-    "name": "timer_0"
-  }
+  "response": "My pleasure, Sir"
 }
 ```
 
@@ -186,7 +177,7 @@ The plugin automatically generates daily session IDs:
 2. **OVOS processes** → Wake word detected, routes to JARVIS persona
 3. **Persona sends to n8n** → Query sent to webhook with session ID
 4. **N8N workflow runs** → AI agent processes with JARVIS personality
-5. **Response returned** → JARVIS responds and executes timer locally
+5. **Response returned** → JARVIS responds with appropriate text
 
 ## Testing Installation
 
@@ -203,41 +194,24 @@ The test will verify:
 - Configuration files
 - Plugin manager detection
 
-## Tool Command Examples
+## Response Examples
 
-### Timer Operations
+### Simple Responses
 ```json
 {
-  "tool": "timer",
-  "action": "start",
-  "params": {
-    "duration": 300000,  // 5 minutes in milliseconds
-    "name": "timer_0"
-  }
+  "response": "Right away, Sir. I'll handle that for you."
 }
 ```
 
-### Alarm Management
 ```json
 {
-  "tool": "alarm",
-  "action": "set",
-  "params": {
-    "time": "07:00",
-    "name": "morning_alarm",
-    "label": "Wake up",
-    "repeat_daily": true
-  }
+  "response": "Of course, Sir. Consider it done."
 }
 ```
 
-### Music Control (Delegated)
 ```json
 {
-  "tool": "spotify_music",
-  "params": {
-    "question": "Play some AC/DC"
-  }
+  "response": "My pleasure, Sir."
 }
 ```
 
@@ -245,8 +219,8 @@ The test will verify:
 
 The plugin works with two system prompts:
 
-1. **jarvis_system_prompt.md**: Main JARVIS persona and tool routing
-2. **music_system_prompt.md**: Spotify MCP sub-workflow handling
+1. **jarvis_system_prompt.md**: Main JARVIS persona prompt
+2. **music_system_prompt.md**: Music handling prompts
 
 ## Project Structure
 
@@ -256,10 +230,7 @@ ovos-n8n-agent-plugin/
 │   ├── __init__.py
 │   ├── persona.py             # JARVIS persona implementation
 │   ├── n8n_client.py          # N8N webhook client
-│   ├── command_processor.py   # Tool command router
-│   └── media_controllers/
-│       ├── timer.py           # Timer operations
-│       └── alarm.py           # Alarm operations
+│   └── command_processor.py   # Command processor (extensible)
 ├── workflows/                 # Pre-built n8n workflows
 │   ├── jarvis.json           # Main JARVIS workflow
 │   ├── music.json            # Spotify MCP sub-workflow
@@ -327,14 +298,7 @@ ovos-n8n-agent-plugin/
 
 ## Message Bus Events
 
-The persona emits events for tool executions:
-
-```
-ovos.persona.jarvis.tool.timer
-ovos.persona.jarvis.tool.alarm
-ovos.persona.jarvis.tool.spotify_music
-ovos.persona.jarvis.tool.weather
-```
+The persona integrates with OVOS message bus for system events.
 
 Listen to events:
 ```bash
