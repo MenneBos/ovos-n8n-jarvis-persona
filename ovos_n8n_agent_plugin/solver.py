@@ -5,7 +5,6 @@ from typing import Optional, Dict, Any, List
 from ovos_plugin_manager.templates.solvers import ChatMessageSolver
 from ovos_utils.log import LOG
 from .n8n_client import N8NClient
-from .command_processor import CommandProcessor
 
 logger = LOG.create_logger(__name__)
 
@@ -27,14 +26,11 @@ class N8NJarvisSolver(ChatMessageSolver):
                         enable_tx=enable_tx, enable_cache=enable_cache,
                         internal_lang=internal_lang)
         
-        # Initialize n8n client and command processor
+        # Initialize n8n client
         self.n8n_client = N8NClient(self.config)
-        self.command_processor = CommandProcessor(self.config)
         
         # Configuration options
         self.enable_streaming = self.config.get("enable_streaming", True)
-        self.process_tools = self.config.get("process_tools", True)
-        self.return_text_only = self.config.get("return_text_only", False)
         self.fallback_enabled = self.config.get("fallback_enabled", True)
         
         logger.info(f"N8N Solver initialized with webhook: {self.n8n_client.webhook_url}")
@@ -109,18 +105,6 @@ class N8NJarvisSolver(ChatMessageSolver):
                 # Let fallback solvers handle if enabled
                 return None
             
-            # Process tool calls if enabled
-            if self.process_tools and response.get("type") == "tool_calls":
-                tool_result = self._process_tool_calls(response.get("tool_calls", []))
-                
-                # Return tool message or text response
-                if tool_result.get("message"):
-                    return tool_result["message"]
-                elif response.get("text"):
-                    return response["text"]
-                elif response.get("response"):
-                    return response["response"]
-            
             # Return text response
             if response.get("type") == "text":
                 return response.get("text") or response.get("response", "")
@@ -152,42 +136,6 @@ class N8NJarvisSolver(ChatMessageSolver):
             if not self.fallback_enabled:
                 return "I'm experiencing an internal error, Sir. Please try again."
             return None
-    
-    def _process_tool_calls(self, tool_calls: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process tool calls from n8n response"""
-        results = []
-        
-        for tool_call in tool_calls:
-            try:
-                result = self.command_processor.process_command(tool_call)
-                results.append(result)
-                    
-            except Exception as e:
-                logger.error(f"Error processing tool call: {e}", exc_info=True)
-                results.append({
-                    "success": False,
-                    "error": str(e),
-                    "tool": tool_call.get("tool"),
-                    "action": tool_call.get("action")
-                })
-        
-        # Return summary of results
-        if results:
-            successful = [r for r in results if r.get("success")]
-            if successful:
-                return {
-                    "success": True,
-                    "message": successful[0].get("message", "Action completed"),
-                    "results": results
-                }
-            else:
-                return {
-                    "success": False,
-                    "error": results[0].get("error", "Action failed"),
-                    "results": results
-                }
-        
-        return {"success": True, "message": "No actions to perform"}
     
     def shutdown(self):
         """Cleanup when shutting down"""

@@ -236,8 +236,7 @@ ovos-n8n-agent-plugin/
 ├── ovos_n8n_agent_plugin/
 │   ├── __init__.py
 │   ├── persona.py             # JARVIS persona implementation
-│   ├── n8n_client.py          # N8N webhook client
-│   └── command_processor.py   # Command processor (extensible)
+│   └── n8n_client.py          # N8N webhook client
 ├── workflows/                 # Pre-built n8n workflows
 │   ├── jarvis.json           # Main JARVIS workflow
 │   ├── music.json            # Spotify MCP sub-workflow
