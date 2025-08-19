@@ -1,0 +1,266 @@
+{
+  "name": "phone",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.command }}",
+        "options": {
+          "systemMessage": "You are a phone agent, your job is to manage phone calls to contacts using the tools provided.  If the user does not specify a country code for a number, use +1.  Use the sipaddress of a contact to delete a contact. When adding a contact, separate the name into the name field and the number into the number field."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "1748c4e4-7e17-40f1-bc43-0089359f710f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        224
+      ],
+      "id": "9b03ee7d-d4cb-4bcf-a310-2980600d7924",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEKyyg8dt15AQjsD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Ends a conference call",
+        "method": "POST",
+        "url": "http://192.168.1.98:5000/hangup",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        224
+      ],
+      "id": "58b963af-3cf5-4ae8-9287-f7e04e7d08f8",
+      "name": "hangup"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Dials a sip address from the contacts list",
+        "method": "POST",
+        "url": "http://192.168.1.98:5000/dial",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "sipaddress",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        224
+      ],
+      "id": "8aee2af0-8f1f-4a44-aea1-0f1b3255e74a",
+      "name": "dial"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Adds a contact to the address book by name and number",
+        "method": "POST",
+        "url": "http://192.168.1.98:5000/add-contact",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `The phone number of the contact`, 'string') }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `The name of the contact`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        608,
+        224
+      ],
+      "id": "9fdce742-310f-42ed-9832-68adc7b16a25",
+      "name": "add contact"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Deletes a contact from the address book",
+        "method": "POST",
+        "url": "http://192.168.1.98:5000/del-contact",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "sipaddress",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        736,
+        224
+      ],
+      "id": "1872d678-4690-4b50-b9f8-1a8b9253eb17",
+      "name": "delete contact"
+    },
+    {
+      "parameters": {
+        "toolDescription": "lists the contacts in the address book",
+        "url": "http://192.168.1.98:5000/contacts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        224
+      ],
+      "id": "488b63e9-8b86-4901-8326-a8ab37f6158e",
+      "name": "list contacts"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "command"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f24dbf83-6537-45fb-b4e3-9c27ab9a82d5",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "hangup": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dial": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4054fa67-b416-4ab3-89bd-914f9e7c26d1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4711f5cd754bb8f9a867a48ef33bed51a5448d1e04645a159bef845553dab62f"
+  },
+  "id": "hLHBrFKX6kn6mV7f",
+  "tags": []
+}
