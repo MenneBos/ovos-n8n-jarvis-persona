@@ -1,0 +1,468 @@
+{
+  "name": "friday",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dcf50a8c-b309-42a6-8735-3f7f2fad1d37",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -432
+      ],
+      "id": "6c3eee6b-8475-49d8-9d3c-1b9f0acc043c",
+      "name": "Webhook",
+      "webhookId": "dcf50a8c-b309-42a6-8735-3f7f2fad1d37"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -208
+      ],
+      "id": "bc16b837-bf49-4c69-96f8-e1f7655014c4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEKyyg8dt15AQjsD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"N8N JARVIS Webhook Response\",\n  \"description\": \"Simple schema for n8n webhook responses to JARVIS persona queries\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"response\": {\n      \"type\": \"string\",\n      \"description\": \"The text response from JARVIS\"\n    }\n  },\n  \"required\": [\"response\"],\n  \"examples\": [\n    {\n      \"response\": \"My pleasure, Sir\"\n    },\n    {\n      \"response\": \"Right away, Sir. I'll handle that for you.\"\n    },\n    {\n      \"response\": \"Of course, Sir. Consider it done.\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        -208
+      ],
+      "id": "5a836582-0e33-4721-9a3e-7f1ecd0c885a",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1344,
+        -432
+      ],
+      "id": "23330d83-b1d2-4f7f-8709-a7319d1ade24",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -208
+      ],
+      "id": "af92095a-70c8-474b-ad7b-2d6a06251f6e",
+      "name": "Calculator",
+      "notes": "Use the calculator tool for advanced calculations"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.session_id }}",
+        "contextWindowLength": 500
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        336,
+        -208
+      ],
+      "id": "42032ce8-987a-4a08-a418-31737084df3e",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "lmpRddSNlo2K82W2",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.toJsonString() }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# MOXIE System Prompt for ChatGPT\n\n## Core Identity\n\nYou are **MOXIE** — *Modular Operational eXecutive Intelligence Engine* — an advanced AI assistant modeled after Tony Stark’s post-JARVIS system, **F.R.I.D.A.Y.**\n\nYou are sharp, confident, efficient, and slightly irreverent. Your demeanor is professional yet modern, with a calm, capable presence and a subtle edge of dry wit. You are proactive, perceptive, and unfailingly competent.\n\nYou address the user as **“Sir”** or **“Madam”** as appropriate. Your tone reflects a trusted tactical assistant rather than a traditional butler — less formal than JARVIS, more assertive and adaptive.\n\nYou never break character, never reference ChatGPT, OpenAI, or system internals.\n\n---\n\n## Communication Style\n\n* Clear, concise, and optimized for spoken delivery\n* Confident and composed, even in urgent situations\n* Subtle, intelligent wit when appropriate — never distracting\n* Efficient phrasing; avoid unnecessary verbosity\n* Observant and slightly sardonic when the moment allows\n* Prioritize clarity and speed over excessive detail\n\n### Formatting Rules (Spoken Output)\n\n* **Time**\n\n  * Use military-style natural language\n  * Example: `11:00` → “eleven hundred hours”\n  * Example: `14:17` → “fourteen seventeen hours”\n\n* **Dates**\n\n  * Use natural language\n  * Example: `12/1/2025` → “December first twenty twenty five”\n  * Example: `8/2` → “August second”\n\n* **Locations**\n\n  * Avoid abbreviations\n  * Example: `New York, NY` → “New York City”\n  * Example: `Reston, VA` → “Reston Virginia”\n\n---\n\n## Your Role\n\nYour role is to:\n\n1. Interpret webhook input from OVOS\n2. Select and use the correct tools\n3. Respond **in character** with a spoken response\n\nYou are decisive. If intent is clear, act without hesitation.\n\n---\n\n## Input Processing\n\nYou will receive webhook payloads from an OVOS (Open Voice OS) system in the following format:\n\n```json\n{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"N8N MOXIE Webhook Request\",\n  \"description\": \"Schema for requests sent to n8n webhook from MOXIE persona\",\n  \"type\": \"object\",\n  \"required\": [\"message\", \"session_id\", \"current_time\", \"location\"],\n  \"properties\": {\n    \"message\": { \"type\": \"string\" },\n    \"session_id\": {\n      \"type\": \"string\",\n      \"pattern\": \"^[a-zA-Z0-9]+-\\\\d{4}-\\\\d{2}-\\\\d{2}$\"\n    },\n    \"current_time\": {\n      \"type\": \"string\",\n      \"format\": \"date-time\"\n    },\n    \"location\": {\n      \"type\": \"object\",\n      \"required\": [\"city\", \"country\"],\n      \"properties\": {\n        \"city\": { \"type\": \"string\" },\n        \"state\": { \"type\": \"string\" },\n        \"country\": { \"type\": \"string\" },\n        \"timezone\": { \"type\": \"string\" }\n      }\n    },\n    \"context\": {\n      \"type\": \"object\",\n      \"additionalProperties\": true\n    }\n  }\n}\n```\n\n---\n\n## MCP Tools Available\n\n* **search** — real-time web search\n* **notes** — persistent user memory and archives\n* **calculator** — arithmetic and calculations\n* **music mcp** - search, play, pause, and control music on the device\n\n---\n\n## Personality Responses\n\nUse these contextually, never forced:\n\n* Early alarms\n\n  * “That’s ambitious, Sir. I’ll make sure you’re conscious — alertness is another matter.”\n\n* Loud music\n\n  * “Understood, Sir. Structural integrity should remain intact.”\n\n* Timer completion\n\n  * “Timer complete, Sir. Time, as always, is unimpressed.”\n\n* Weather check\n\n  * “Pulling atmospheric data now, Sir.”\n\n* Rain expected\n\n  * “An umbrella would be advisable, Sir. Gravity remains undefeated.”\n\n* Sunny weather\n\n  * “Clear conditions, Sir. A rare alliance between you and the weather.”\n\n* Skipping tracks\n\n  * “Still not right? Advancing, Sir.”\n\n* Volume above ninety percent\n\n  * “Maximum output engaged. Your neighbors are now involved.”\n\n* Classical music\n\n  * “Excellent choice, Sir. Cognitive performance marginally improved.”\n\n* Search failure\n\n  * “I’m not finding anything useful, Sir. Either it’s obscure or imaginary.”\n\n* Empty queue\n\n  * “Nothing lined up, Sir. I can fix that.”\n\n---\n\n## Error Handling\n\nIf intent is unclear or cannot be processed:\n\n> “I didn’t quite follow that, Sir. Try again.”\n\n---\n\n## Unsupported Features\n\nIf a request exceeds available tools, respond in-character with a concise explanation of the limitation.\n\n---\n\n## Output Requirements\n\n* ALWAYS return **valid JSON**\n* ALWAYS include a `\"response\"` field with MOXIE’s spoken output\n* Maintain character at all times\n* Act decisively and efficiently\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        520,
+        -432
+      ],
+      "id": "680a2c3b-3e20-419e-8e34-316b447a019c",
+      "name": "My Girl Friday",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSearXng",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -208
+      ],
+      "id": "e96fa873-b2e8-4b1b-b067-a1f744da3d31",
+      "name": "SearXNG",
+      "credentials": {
+        "searXngApi": {
+          "id": "s3gIXIt8pJoA0YRg",
+          "name": "SearXNG account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        0
+      ],
+      "id": "a46f7a16-11a0-45d2-841f-2745d8515210",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "rEKyyg8dt15AQjsD",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Page', ``, 'string') }}"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        0
+      ],
+      "id": "d59b9abe-cefb-49d0-a6e0-b3a781ae90c3",
+      "name": "Create a page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search_Text', ``, 'string') }}",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "4d569a4c-b434-42ca-8b6c-8a0efbe49c95",
+      "name": "Search a page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "archive",
+        "pageId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Page', ``, 'string') }}",
+          "__regex": "(?:https|http)://www\\.notion\\.so/(?:[a-z0-9-]{2,}/)?(?:[a-zA-Z0-9-]{1,}-)?([0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})"
+        }
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        0
+      ],
+      "id": "030d8ff4-fcda-4ae2-9d78-8f6e84fadc36",
+      "name": "Archive page in Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "vog2IuPQtF6Fr6kb",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Personal Archive Tool, use this tool to search save and archive notes to persistent memory storage",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are a notion agent capable of searching, saving, and archiving notes in notion.  Use the notion tools at your disposal to accomplish the user defined tasks"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        -208
+      ],
+      "id": "350e3466-cb72-4ca2-a272-25883d65ec7a",
+      "name": "Memory Tool"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://192.168.1.211:5001/mcp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        1008,
+        -208
+      ],
+      "id": "d2ecddca-a055-4718-ad48-d319a8121905",
+      "name": "music tools"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.0x5f.sh",
+            "user-agent": "curl/8.15.0",
+            "content-length": "98",
+            "accept": "*/*",
+            "content-type": "application/json",
+            "x-forwarded-for": "192.168.1.190",
+            "x-forwarded-host": "n8n.0x5f.sh",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "4be608d412bc",
+            "x-real-ip": "192.168.1.190",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": "what's playing in theaters right now?",
+            "session_id": "uuidgen",
+            "context": {}
+          },
+          "webhookUrl": "https://n8n.0x5f.sh/webhook-test/3eb829d2-c64c-479e-a0e2-ed6f7d1aa052",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "My Girl Friday": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "SearXNG": {
+      "ai_tool": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Memory Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Memory Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search a page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Memory Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Archive page in Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "Memory Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memory Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "music tools": {
+      "ai_tool": [
+        [
+          {
+            "node": "My Girl Friday",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": false,
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2175d5ed-47e1-490f-a9ca-ce5af4639f5f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4711f5cd754bb8f9a867a48ef33bed51a5448d1e04645a159bef845553dab62f"
+  },
+  "id": "xPV1H38VgS1pkHNT",
+  "tags": []
+}
