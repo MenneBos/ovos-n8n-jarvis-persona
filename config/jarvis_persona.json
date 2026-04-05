@@ -3,7 +3,7 @@
   "description": "Just A Rather Very Intelligent System - Tony Stark's AI assistant from Iron Man",
   "solvers": ["ovos-n8n-jarvis-solver"],
   "ovos-n8n-jarvis-solver": {
-    "webhook_url": "https://your-n8n.com/webhook/jarvis",
+    "webhook_url": "http://n8n:5678/webhook/jarvis",
     "primary_persona": true,
     "enable_streaming": true,
     "process_tools": true,
@@ -21,6 +21,6 @@
       "country": "USA",
       "timezone": "America/New_York"
     },
-    "comment": "Copy this file to ~/.config/ovos_persona/jarvis.json and update webhook_url and location"
+    "comment": "Docker default: webhook_url points to n8n on the shared jarvis_net network. Change to your public n8n URL for non-Docker deployments."
   }
 }

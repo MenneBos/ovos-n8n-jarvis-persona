@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OVOS JARVIS + n8n – Docker Compose stack
+#
+# Quick-start:
+#   1. Copy .env.example to .env and adjust N8N_EXTERNAL_URL if needed.
+#   2. Edit config/jarvis_persona.json and set:
+#        "webhook_url": "http://n8n:5678/webhook/jarvis"
+#      (the service name "n8n" is resolved on the shared jarvis_net network).
+#   3. docker compose up -d
+#
+# Config files that are mounted (host path → container path):
+#   config/mycroft_persona.conf   → /home/ovos/.config/mycroft/mycroft.conf
+#     (the host file is named mycroft_persona.conf; OVOS reads it as mycroft.conf)
+#   config/jarvis_persona.json    → /home/ovos/.config/ovos_persona/jarvis.json
+#   config/hey_jarvis_v0.1.tflite → /home/ovos/hey_jarvis_v0.1.tflite
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── OVOS (core + JARVIS plugin) ──────────────────────────────────────────
+  ovos:
+    build: .
+    container_name: ovos-jarvis
+    restart: unless-stopped
+    depends_on:
+      n8n:
+        condition: service_healthy
+    volumes:
+      # mycroft.conf – both containers resolve paths relative to the host.
+      # Edit on the host; the container sees it read-only.
+      - ./config/mycroft_persona.conf:/home/ovos/.config/mycroft/mycroft.conf:ro
+      # Persona config – set webhook_url to http://n8n:5678/webhook/jarvis
+      - ./config/jarvis_persona.json:/home/ovos/.config/ovos_persona/jarvis.json:ro
+      # Wake-word model (path must match mycroft.conf → hotwords.hey_jarvis.models)
+      - ./config/hey_jarvis_v0.1.tflite:/home/ovos/hey_jarvis_v0.1.tflite:ro
+      # Persistent OVOS state / skills data
+      - ovos_data:/home/ovos/.local
+    networks:
+      - jarvis_net
+
+  # ── n8n workflow server ──────────────────────────────────────────────────
+  n8n:
+    # Pin to a specific version for reproducible builds, e.g. n8nio/n8n:1.85.0
+    image: n8nio/n8n:latest
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      # Expose the n8n UI / API on the host.
+      # The OVOS container reaches n8n via the internal network (no port mapping
+      # needed for that path) using http://n8n:5678/webhook/...
+      - "5678:5678"
+    volumes:
+      # Persistent n8n data (credentials, workflow state, etc.)
+      - n8n_data:/home/node/.n8n
+      # Pre-built workflow templates – import them via the n8n UI
+      - ./workflows:/home/node/workflows:ro
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      # WEBHOOK_URL tells n8n what URL to display in the UI for webhooks.
+      # Set this to your server's public address in .env if n8n is behind a
+      # reverse proxy. The OVOS container always uses the internal address.
+      - WEBHOOK_URL=${N8N_EXTERNAL_URL:-http://localhost:5678}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:5678/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - jarvis_net
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  jarvis_net:
+    driver: bridge
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  ovos_data:
+  n8n_data:
