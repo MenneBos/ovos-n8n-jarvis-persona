@@ -33,6 +33,7 @@ dependencies = [
     "pydbus>=0.6.0",
     "aiohttp>=3.9.0",
     "websocket-client>=1.6.0",
+    "pydantic~=2.0",
 ]
 
 [project.optional-dependencies]
